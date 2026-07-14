@@ -4,7 +4,7 @@ overview: A unified, chapter-based implementation plan for Ontolog — a determi
 todos:
   - id: ch0-scaffold
     content: "Chapter 0: Scaffold repo (pyproject.toml, src/ontolog, CI, RTD, pre-commit) modeled on pulq"
-    status: completed
+    status: in_progress
   - id: ch1-core
     content: "Chapter 1: LogRecord, config, errors, CLI skeleton (ontolog --version)"
     status: pending
@@ -160,7 +160,7 @@ Each chapter ends with **verifiable acceptance criteria** — CI must stay green
 
 ### Chapter 0 — Repository scaffold and engineering baseline
 
-**Status:** completed (merged in PR #1)
+**Status:** implemented locally on `chore/ch0-scaffold` — pending push and merge via GitHub Desktop
 
 **Goal:** Empty-but-runnable Python library project with green CI/CD, matching pulq conventions.
 
@@ -178,7 +178,7 @@ Each chapter ends with **verifiable acceptance criteria** — CI must stay green
 - [x] `pip install -e ".[dev]"` succeeds
 - [x] `ruff check`, `ruff format --check`, `mypy src`, `pytest` all pass
 - [x] `sphinx-build -W docs _build/html` passes
-- [x] GitHub Actions CI green on `main`
+- [ ] GitHub Actions CI green on `main` (after merge)
 - [x] `python -c "import ontolog"` works after wheel build
 
 ### Chapter 1 — Core models, config, and CLI skeleton
