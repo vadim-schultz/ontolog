@@ -1,0 +1,36 @@
+name: Manual PyPI Publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      skip_pypi:
+        description: "Skip PyPI upload (dry run)"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  pypi:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: pip install build twine
+
+      - name: Build
+        run: python -m build
+
+      - name: Publish
+        if: github.event_name != 'workflow_dispatch' || inputs.skip_pypi != true
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true

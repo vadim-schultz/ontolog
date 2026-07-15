@@ -1,0 +1,98 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ontolog"
+version = "0.0.1"
+description = "Probabilistic domain-model inference from application logs"
+readme = { file = "README.md", content-type = "text/markdown" }
+license = "MIT"
+requires-python = ">=3.11"
+authors = [{ name = "Vadim Schultz" }]
+keywords = ["logs", "domain-model", "inference", "drain3", "evidence", "templates"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Logging",
+]
+dependencies = [
+    "pydantic>=2.0",
+    "typing-extensions>=4.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=4.1",
+    "ruff>=0.3",
+    "mypy>=1.9",
+    "hypothesis>=6.0",
+]
+docs = [
+    "sphinx>=7.0",
+    "sphinx-rtd-theme>=2.0",
+    "myst-parser>=2.0",
+    "sphinx-autodoc-typehints>=2.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/vadim-schultz/ontolog"
+Documentation = "https://ontolog.readthedocs.io"
+Repository = "https://github.com/vadim-schultz/ontolog"
+Issues = "https://github.com/vadim-schultz/ontolog/issues"
+Changelog = "https://github.com/vadim-schultz/ontolog/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ontolog = ["py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests", "examples", "benchmarks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "ANN", "B", "C4", "DTZ", "T10", "EM", "ISC", "PIE", "PT", "RET", "SIM", "TCH", "ARG", "PTH", "PL", "TRY", "RUF"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/ontolog/__init__.py" = ["TC001", "TC003"]
+"tests/**/*.py" = ["S101", "PLR2004", "ANN001"]
+"examples/**/*.py" = ["T201"]
+"benchmarks/**/*.py" = ["T201"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+packages = ["ontolog"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "corpus: tests that require downloaded LogHub corpora (deselect by default)",
+]
+addopts = "--cov=ontolog --cov-report=term-missing --cov-report=xml"
+
+[tool.coverage.run]
+source_pkgs = ["ontolog"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "@overload",
+]
