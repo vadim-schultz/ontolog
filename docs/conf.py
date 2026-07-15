@@ -30,6 +30,7 @@ source_suffix = {
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+suppress_warnings = ["sphinx_autodoc_typehints.forward_reference"]
 
 autodoc_member_order = "bysource"
 typehints_defaults = "comma"

@@ -22,7 +22,7 @@ Raw logs → Preprocessing → Drain3 templates → Evidence providers → Evide
 
 | Module | Responsibility |
 |--------|----------------|
-| `ingestion/` | Parsers and preprocessors (Chapter 2) |
+| `ingestion/` | Parsers, preprocessors, streaming reader (`ontolog ingest`) — see {doc}`ingestion` |
 | `templates/` | Drain3 adapter, masking, template store (Chapter 3) |
 | `evidence/` | Evidence graph abstraction (Chapter 4) |
 | `providers/` | Deterministic and semantic evidence providers (Chapters 5, 10) |

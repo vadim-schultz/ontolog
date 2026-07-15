@@ -4,6 +4,7 @@
 .. automodule:: ontolog
    :members:
    :undoc-members:
+   :exclude-members: LogRecord
 ```
 
 ```{eval-rst}
@@ -20,6 +21,18 @@
 
 ```{eval-rst}
 .. automodule:: ontolog.errors
+   :members:
+   :undoc-members:
+```
+
+```{eval-rst}
+.. automodule:: ontolog.types
+   :members:
+   :undoc-members:
+```
+
+```{eval-rst}
+.. automodule:: ontolog.ingestion
    :members:
    :undoc-members:
 ```

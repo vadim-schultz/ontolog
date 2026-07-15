@@ -1,0 +1,6 @@
+{"message": "service started", "timestamp": "2024-01-15T10:00:00Z", "level": "info", "hostname": "app-01", "process": "api", "pid": 4242}
+{"_HOSTNAME": "edge-01", "MESSAGE": "connection accepted", "PRIORITY": "6", "SYSLOG_IDENTIFIER": "nginx"}
+{"event": "PacketSent", "level": "info", "timestamp": "2024-01-15T12:00:01.123456Z", "interface": "eth0", "destination": "192.168.1.10"}
+{"log_level": "warning", "event": "retry scheduled", "timestamp": "2024-01-15T12:01:00+00:00", "logger_name": "worker", "attempt": 2}
+{"message": {"detail": "nested payload"}, "timestamp": "2024-01-15T12:02:00Z", "level": "error"}
+{"timestamp": "2024-01-15T12:03:00Z", "level": "debug", "logger": "db", "message": "query complete"}

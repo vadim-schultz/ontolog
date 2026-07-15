@@ -4,6 +4,10 @@
 
 ### Added
 
+* Log ingestion: syslog, JSONL, and plain parsers
+* Preprocessor registry and streaming reader (file, directory, stdin)
+* `ontolog ingest` CLI command (JSONL output)
+* Fixtures: `controlboard.log`, LogHub `apache_2k` / `openssh_2k` slices
 * `LogRecord` model, `OntologConfig`, typed exceptions
 * `ontolog` CLI with `--version` and `--help`
 * Project scaffold (Chapter 0): `src/ontolog` package, pytest harness, Sphinx docs stub, GitHub

@@ -15,6 +15,7 @@ class ParseError(OntologError):
         line: str | None = None,
         line_number: int | None = None,
     ) -> None:
+        """Attach optional source line context to the error."""
         super().__init__(message)
         self.line = line
         self.line_number = line_number
