@@ -22,8 +22,13 @@ classifiers = [
 ]
 dependencies = [
     "pydantic>=2.0",
+    "rich>=13.0",
+    "typer>=0.12",
     "typing-extensions>=4.5",
 ]
+
+[project.scripts]
+ontolog = "ontolog.cli.main:app"
 
 [project.optional-dependencies]
 dev = [
@@ -64,6 +69,7 @@ ignore = ["S101"]
 
 [tool.ruff.lint.per-file-ignores]
 "src/ontolog/__init__.py" = ["TC001", "TC003"]
+"src/ontolog/models/log_record.py" = ["TC003"]
 "tests/**/*.py" = ["S101", "PLR2004", "ANN001"]
 "examples/**/*.py" = ["T201"]
 "benchmarks/**/*.py" = ["T201"]

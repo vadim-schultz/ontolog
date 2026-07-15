@@ -69,6 +69,7 @@ jobs:
       - name: Test install from wheel
         run: |
           pip install dist/*.whl
+          ontolog --version
           python -c "import ontolog; print(ontolog.__version__)"
 
   docs:

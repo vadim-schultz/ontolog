@@ -18,7 +18,7 @@ semantic annotations from user-provided LLM providers. The output is a probabili
 exportable as Pydantic models, JSON Schema, Mermaid diagrams, or property graphs.
 
 **Status:** Chapter 0 scaffold — library skeleton and CI/CD baseline. Inference pipeline lands in
-later chapters; see [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
+later chapters; see [`.plans/IMPLEMENTATION_PLAN.md`](.plans/IMPLEMENTATION_PLAN.md).
 
 ## Install
 
@@ -40,7 +40,7 @@ pytest
 ## Documentation
 
 - [Read the Docs](https://ontolog.readthedocs.io)
-- [Implementation plan](IMPLEMENTATION_PLAN.md)
+- [Implementation plans](.plans/README.md)
 - [Contributing](CONTRIBUTING.md)
 
 ## License

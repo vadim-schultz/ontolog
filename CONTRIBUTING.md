@@ -61,5 +61,5 @@ Releases can be published via [`.github/workflows/publish.yml`](.github/workflow
 
 ## Implementation plan
 
-Work is organized in chapters — see [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Each
+Work is organized in chapters — see [`.plans/IMPLEMENTATION_PLAN.md`](.plans/IMPLEMENTATION_PLAN.md). Each
 chapter should land as a focused PR with green CI before the next begins.

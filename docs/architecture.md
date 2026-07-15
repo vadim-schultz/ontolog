@@ -30,7 +30,7 @@ Raw logs → Preprocessing → Drain3 templates → Evidence providers → Evide
 | `export/` | Pydantic, JSON Schema, Mermaid, GraphML (Chapter 8) |
 | `cli/` | Typer CLI (`ontolog`) (Chapters 1, 9) |
 
-See [IMPLEMENTATION_PLAN.md](https://github.com/vadim-schultz/ontolog/blob/main/IMPLEMENTATION_PLAN.md)
+See [`.plans/IMPLEMENTATION_PLAN.md`](https://github.com/vadim-schultz/ontolog/blob/main/.plans/IMPLEMENTATION_PLAN.md)
 for chapter-by-chapter deliverables and acceptance criteria.
 
 ## Benchmark corpora

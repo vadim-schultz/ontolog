@@ -4,10 +4,10 @@ overview: A unified, chapter-based implementation plan for Ontolog — a determi
 todos:
   - id: ch0-scaffold
     content: "Chapter 0: Scaffold repo (pyproject.toml, src/ontolog, CI, RTD, pre-commit) modeled on pulq"
-    status: in_progress
+    status: completed
   - id: ch1-core
     content: "Chapter 1: LogRecord, config, errors, CLI skeleton (ontolog --version)"
-    status: pending
+    status: completed
   - id: ch2-ingestion
     content: "Chapter 2: Parsers (syslog/json/plain), preprocessor registry, ontolog ingest"
     status: pending
@@ -183,13 +183,13 @@ Each chapter ends with **verifiable acceptance criteria** — CI must stay green
 
 ### Chapter 1 — Core models, config, and CLI skeleton
 
-**Status:** pending
+**Status:** complete
 
-See full chapter details in plan history. Deliverables: `LogRecord`, `config.py`, `errors.py`, `ontolog --version`.
+Deliverables: `LogRecord`, `config.py`, `errors.py`, `ontolog --version` / `--help`.
 
 ### Chapters 2–12
 
-**Status:** pending — see sections in original unified plan for full acceptance criteria per chapter.
+**Status:** pending — see [unified.plan.md](unified.plan.md) for full acceptance criteria per chapter.
 
 **MVP boundary:** Chapters 0–9 + Chapter 12 (without 10–11).
 
