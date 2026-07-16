@@ -16,6 +16,17 @@ pre-commit install
 
 ## Checks
 
+Run the full CI pipeline locally before pushing:
+
+```bash
+./scripts/ci.sh        # all CI jobs
+./scripts/ci.sh lint   # lint-test only
+./scripts/ci.sh build  # build-test only
+./scripts/ci.sh docs   # docs only
+```
+
+Or run individual checks:
+
 ```bash
 ruff check src tests examples benchmarks
 ruff format src tests examples benchmarks

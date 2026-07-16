@@ -28,9 +28,14 @@ def _version_callback(value: bool) -> None:
 
 @app.callback()
 def main(
-    _version: Annotated[
+    version: Annotated[
         bool | None,
-        typer.Option("--version", callback=_version_callback, is_eager=True),
+        typer.Option(
+            "--version",
+            callback=_version_callback,
+            is_eager=True,
+            help="Show the version and exit.",
+        ),
     ] = None,
 ) -> None:
     """Ontolog — probabilistic domain-model inference from application logs."""
