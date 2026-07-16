@@ -2,6 +2,14 @@
 
 ## Setup
 
+With [uv](https://docs.astral.sh/uv/) (recommended):
+
+```bash
+uv sync --extra dev
+```
+
+Or with pip:
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
@@ -19,11 +27,15 @@ pre-commit install
 Run the full CI pipeline locally before pushing:
 
 ```bash
-./scripts/ci.sh        # all CI jobs
-./scripts/ci.sh lint   # lint-test only
-./scripts/ci.sh build  # build-test only
-./scripts/ci.sh docs   # docs only
+./scripts/ci.sh              # all CI jobs (Python 3.11 + 3.12 via uv, like GitHub Actions)
+./scripts/ci.sh lint         # lint-test only
+./scripts/ci.sh --single     # faster: one interpreter (.venv or Python 3.12)
+./scripts/ci.sh build        # build-test only
+./scripts/ci.sh docs         # docs only
 ```
+
+The default matrix uses `uv python install` to download missing interpreters and
+runs each version in `.ci-venvs/` without touching your project `.venv`.
 
 Or run individual checks:
 

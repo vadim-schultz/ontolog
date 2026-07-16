@@ -25,6 +25,7 @@ wheels/
 # ── Virtual environments ──────────────────────────────────────────────
 .venv/
 venv/
+.ci-venvs/
 
 # ── Local environment & secrets ───────────────────────────────────────
 .env
