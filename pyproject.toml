@@ -36,7 +36,7 @@ dev = [
     "pytest>=8.0",
     "pytest-cov>=4.1",
     "ruff>=0.3",
-    "mypy>=1.9",
+    "mypy>=2.3.0",
     "hypothesis>=6.156.6",
 ]
 docs = [
