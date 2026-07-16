@@ -36,3 +36,21 @@
    :members:
    :undoc-members:
 ```
+
+```{eval-rst}
+.. automodule:: ontolog.models.template
+   :members:
+   :undoc-members:
+```
+
+```{eval-rst}
+.. automodule:: ontolog.templates
+   :members:
+   :undoc-members:
+```
+
+```{eval-rst}
+.. automodule:: ontolog.storage
+   :members:
+   :undoc-members:
+```

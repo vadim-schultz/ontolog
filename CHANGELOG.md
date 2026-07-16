@@ -4,6 +4,10 @@
 
 ### Added
 
+* Template extraction via Drain3 (`TemplateExtractor`, `extract_templates`)
+* Configurable masking (IP, UUID, MAC, hex, email, numbers, timestamps)
+* `Template` model and SQLite persistence (`templates`, `template_occurrences`)
+* `ontolog templates` CLI with Rich summary table
 * Log ingestion: syslog, JSONL, and plain parsers
 * Preprocessor registry and streaming reader (file, directory, stdin)
 * `ontolog ingest` CLI command (JSONL output)

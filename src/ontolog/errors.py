@@ -1,5 +1,9 @@
 """Exceptions raised by ontolog."""
 
+from __future__ import annotations
+
+from pathlib import Path
+
 
 class OntologError(Exception):
     """Base class for ontolog errors."""
@@ -31,6 +35,11 @@ class ConfigError(OntologError):
 
 class StorageError(OntologError):
     """Raised when persistence operations fail."""
+
+    def __init__(self, message: str, *, path: Path | None = None) -> None:
+        """Attach optional database path context to the error."""
+        super().__init__(message)
+        self.path = path
 
 
 class InferenceError(OntologError):

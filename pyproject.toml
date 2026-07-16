@@ -21,6 +21,7 @@ classifiers = [
     "Topic :: System :: Logging",
 ]
 dependencies = [
+    "drain3>=0.9.11",
     "pydantic>=2.0",
     "rich>=13.0",
     "typer>=0.12",
@@ -80,8 +81,14 @@ ignore = ["S101"]
 "src/ontolog/ingestion/reader.py" = ["TC001", "TC003"]
 "src/ontolog/ingestion/registry.py" = ["TC001"]
 "src/ontolog/ingestion/source_adapters.py" = ["ARG002"]
-"src/ontolog/cli/main.py" = ["ARG001", "TC003"]
-"tests/**/*.py" = ["S101", "PLR2004", "ANN001", "ARG002", "TC001", "D"]
+"src/ontolog/cli/main.py" = ["ARG001", "TC003", "PLR0913"]
+"src/ontolog/cli/output.py" = ["TC001", "TC003"]
+"src/ontolog/errors.py" = ["TC003"]
+"src/ontolog/models/template.py" = ["TC003"]
+"src/ontolog/templates/masking.py" = ["TC001", "E501"]
+"src/ontolog/templates/extractor.py" = ["TC001", "TC003", "D105", "TRY003", "EM102"]
+"src/ontolog/storage/sqlite.py" = ["TC003", "E501", "D102", "D105", "D107", "TRY003", "EM102"]
+"tests/**/*.py" = ["S101", "PLR2004", "ANN001", "ARG002", "TC001", "TC003", "D"]
 "examples/**/*.py" = ["T201"]
 "benchmarks/**/*.py" = ["T201"]
 
@@ -92,6 +99,10 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 packages = ["ontolog"]
+
+[[tool.mypy.overrides]]
+module = ["drain3", "drain3.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
