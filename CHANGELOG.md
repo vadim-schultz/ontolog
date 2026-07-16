@@ -4,6 +4,11 @@
 
 ### Added
 
+* Evidence graph foundation: `Evidence`, `Node`, `Edge`, `NodeKind` models
+* `EvidenceGraph` (NetworkX-backed) with JSON serialization and evidence attachment
+* `load_evidence_graph()` library API for loading graphs from the SQLite store
+* `ontolog graph --show` CLI (thin wrapper over library API)
+* CLI reorganized into per-command sub-packages (`cli/ingest`, `cli/templates`, `cli/graph`)
 * Template extraction via Drain3 (`TemplateExtractor`, `extract_templates`)
 * Configurable masking (IP, UUID, MAC, hex, email, numbers, timestamps)
 * `Template` model and SQLite persistence (`templates`, `template_occurrences`)

@@ -22,6 +22,7 @@ classifiers = [
 ]
 dependencies = [
     "drain3>=0.9.11",
+    "networkx>=3.0",
     "pydantic>=2.0",
     "rich>=13.0",
     "typer>=0.12",
@@ -81,9 +82,15 @@ ignore = ["S101"]
 "src/ontolog/ingestion/reader.py" = ["TC001", "TC003"]
 "src/ontolog/ingestion/registry.py" = ["TC001"]
 "src/ontolog/ingestion/source_adapters.py" = ["ARG002"]
-"src/ontolog/cli/main.py" = ["ARG001", "TC003", "PLR0913"]
+"src/ontolog/cli/main.py" = ["ARG001", "TC003"]
 "src/ontolog/cli/output.py" = ["TC001", "TC003"]
+"src/ontolog/cli/ingest/commands.py" = ["ARG001", "TC003", "PLR0913"]
+"src/ontolog/cli/templates/commands.py" = ["ARG001", "TC003", "PLR0913"]
+"src/ontolog/cli/graph/commands.py" = ["ARG001", "TC003"]
 "src/ontolog/errors.py" = ["TC003"]
+"src/ontolog/models/evidence.py" = ["TC003"]
+"src/ontolog/evidence/graph.py" = ["TC003", "D102", "D107", "TRY003", "EM102"]
+"src/ontolog/evidence/loader.py" = ["TC003"]
 "src/ontolog/models/template.py" = ["TC003"]
 "src/ontolog/templates/masking.py" = ["TC001", "E501"]
 "src/ontolog/templates/extractor.py" = ["TC001", "TC003", "D105", "TRY003", "EM102"]
@@ -104,6 +111,9 @@ packages = ["ontolog"]
 module = ["drain3", "drain3.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "networkx"
+ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [

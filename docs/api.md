@@ -54,3 +54,15 @@
    :members:
    :undoc-members:
 ```
+
+```{eval-rst}
+.. automodule:: ontolog.models.evidence
+   :members:
+   :undoc-members:
+```
+
+```{eval-rst}
+.. automodule:: ontolog.evidence
+   :members:
+   :undoc-members:
+```

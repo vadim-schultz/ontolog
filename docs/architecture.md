@@ -25,11 +25,11 @@ Raw logs → Preprocessing → Drain3 templates → Evidence providers → Evide
 | `ingestion/` | Parsers, preprocessors, streaming reader (`ontolog ingest`) — see {doc}`ingestion` |
 | `templates/` | Drain3 adapter, masking, template store (`ontolog templates`) — see {doc}`templates` |
 | `storage/` | SQLite persistence for templates and occurrences |
-| `evidence/` | Evidence graph abstraction (Chapter 4) |
+| `evidence/` | Evidence graph (`EvidenceGraph`, `load_evidence_graph`) — see {doc}`api` |
 | `providers/` | Deterministic and semantic evidence providers (Chapters 5, 10) |
 | `inference/` | Event, entity, relationship, state inference (Chapter 6) |
 | `export/` | Pydantic, JSON Schema, Mermaid, GraphML (Chapter 8) |
-| `cli/` | Typer CLI (`ontolog`) (Chapters 1, 9) |
+| `cli/` | Typer CLI (`ontolog`) — thin wrappers over library APIs |
 
 See [`.plans/IMPLEMENTATION_PLAN.md`](https://github.com/vadim-schultz/ontolog/blob/main/.plans/IMPLEMENTATION_PLAN.md)
 for chapter-by-chapter deliverables and acceptance criteria.

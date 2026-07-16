@@ -30,7 +30,7 @@ isProject: false
 
 ## TDD methodology
 
-Every capability follows **red → green → refactor** per [`.cursor/rules/tdd.mdc`](file:///home/schult_v/.cursor/rules/tdd.mdc):
+Every capability follows **red → green → refactor** per [`.cursor/rules/tdd.mdc`](.cursor/rules/tdd.mdc):
 
 1. **Red** — write tests asserting behavior; run `pytest <test_file>` and confirm meaningful failure (ImportError / missing behavior, not typos)
 2. **Green** — smallest production change to pass
