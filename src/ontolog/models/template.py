@@ -25,6 +25,7 @@ class TemplateOccurrence(BaseModel):
     timestamp: datetime | None = None
     message: str
     parameters: tuple[TemplateParameter, ...] = ()
+    process: str | None = None
 
 
 class Template(BaseModel):

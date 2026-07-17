@@ -253,6 +253,7 @@ class TemplateExtractor:
                 timestamp=record.timestamp,
                 message=message,
                 parameters=parameters,
+                process=record.process,
             )
         )
 
