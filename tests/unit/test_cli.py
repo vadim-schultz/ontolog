@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-from typer.testing import CliRunner
+from typer.testing import CliRunner, Result
 
 import ontolog
 from ontolog.cli.main import app
@@ -19,7 +19,7 @@ def _plain_output(text: str) -> str:
     return _ANSI_ESCAPE.sub("", text)
 
 
-def _invoke(*args: object, **kwargs: object):
+def _invoke(*args: object, **kwargs: object) -> Result:
     env = {**_CLI_ENV, **kwargs.pop("env", {})}
     return runner.invoke(*args, color=False, env=env, **kwargs)
 
