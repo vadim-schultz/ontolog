@@ -78,3 +78,15 @@
    :members:
    :undoc-members:
 ```
+
+```{eval-rst}
+.. automodule:: ontolog.models.candidate
+   :members:
+   :undoc-members:
+```
+
+```{eval-rst}
+.. automodule:: ontolog.inference
+   :members:
+   :undoc-members:
+```

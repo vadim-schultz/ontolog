@@ -47,6 +47,24 @@ class ProviderConfig(BaseModel):
     enabled: frozenset[ProviderKind] = Field(default_factory=lambda: frozenset(ProviderKind))
 
 
+class InferenceKind(StrEnum):
+    """Inference pass identifiers."""
+
+    ENTITIES = "entities"
+    EVENTS = "events"
+    FIELDS = "fields"
+    RELATIONSHIPS = "relationships"
+    STATES = "states"
+
+
+class InferenceConfig(BaseModel):
+    """Enable/disable inference passes."""
+
+    model_config = ConfigDict(frozen=True)
+
+    enabled: frozenset[InferenceKind] = Field(default_factory=lambda: frozenset(InferenceKind))
+
+
 class ConfidenceThresholds(BaseModel):
     """Minimum confidence scores for inference and export eligibility."""
 
@@ -66,6 +84,7 @@ class OntologConfig(BaseModel):
 
     masks: MaskConfig = Field(default_factory=MaskConfig)
     providers: ProviderConfig = Field(default_factory=ProviderConfig)
+    inference: InferenceConfig = Field(default_factory=InferenceConfig)
     confidence: ConfidenceThresholds = Field(default_factory=ConfidenceThresholds)
     storage_path: Path = Path("ontolog.db")
 
