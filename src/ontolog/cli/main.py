@@ -7,6 +7,7 @@ from typing import Annotated
 import typer
 
 from ontolog import __version__
+from ontolog.cli.export import export
 from ontolog.cli.graph import graph
 from ontolog.cli.ingest import ingest
 from ontolog.cli.logging import setup_cli_logging
@@ -22,6 +23,7 @@ app = typer.Typer(
 app.command("ingest")(ingest)
 app.command("templates")(templates)
 app.command("graph")(graph)
+app.command("export")(export)
 
 
 def _version_callback(value: bool) -> None:

@@ -159,7 +159,7 @@ run_build_test() {
     "$python" -m build
 
     step "Check package"
-    twine check dist/*
+    "$python" -m twine check dist/*
 
     step "Test install from wheel"
     if command -v uv >/dev/null 2>&1; then
@@ -167,7 +167,7 @@ run_build_test() {
     else
         "$python" -m pip install dist/*.whl
     fi
-    ontolog --version
+    "$(dirname "$python")/ontolog" --version
     "$python" -c "import ontolog; print(ontolog.__version__)"
 }
 

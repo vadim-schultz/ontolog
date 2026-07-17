@@ -9,6 +9,7 @@ optional LLM enrichment, graph-native representation.
 
 getting_started
 architecture
+export
 ingestion
 templates
 api

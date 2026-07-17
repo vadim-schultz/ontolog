@@ -7,6 +7,7 @@ from pathlib import Path
 from ontolog.config import OntologConfig, default_config
 from ontolog.evidence import load_evidence_graph
 from ontolog.evidence.graph import EvidenceGraph
+from ontolog.export import ExportFormat, ExportOptions, export_domain_model
 from ontolog.inference import aggregate_inference_result, build_inference_result
 from ontolog.models.candidate import InferenceResult
 from ontolog.models.domain import ProbabilisticDomainModel
@@ -80,3 +81,16 @@ def aggregate_fixture(
         weights=config.source_weights,
         thresholds=config.confidence,
     )
+
+
+def export_fixture(
+    fixture_name: str,
+    tmp_path: Path,
+    format: ExportFormat,
+    *,
+    config: OntologConfig | None = None,
+    options: ExportOptions | None = None,
+) -> str:
+    """Aggregate a fixture and export it in the requested format."""
+    model = aggregate_fixture(fixture_name, tmp_path, config=config)
+    return export_domain_model(model, format, options=options or ExportOptions())

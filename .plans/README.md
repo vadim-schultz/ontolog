@@ -13,6 +13,7 @@ Chapter-based implementation plans for the Ontolog library. Update these as chap
 | [chapter_5.plan.md](chapter_5.plan.md) | Detailed TDD implementation plan for Chapter 5 |
 | [chapter_6.plan.md](chapter_6.plan.md) | Detailed TDD implementation plan for Chapter 6 |
 | [chapter_7.plan.md](chapter_7.plan.md) | Detailed TDD implementation plan for Chapter 7 |
+| [chapter_8.plan.md](chapter_8.plan.md) | Detailed TDD implementation plan for Chapter 8 |
 
 ## Chapter status
 
@@ -26,4 +27,5 @@ Chapter-based implementation plans for the Ontolog library. Update these as chap
 | 5 — Deterministic providers | Complete | [chapter_5.plan.md](chapter_5.plan.md) |
 | 6 — Inference engine | Complete | [chapter_6.plan.md](chapter_6.plan.md) |
 | 7 — Probabilistic aggregation | Complete | [chapter_7.plan.md](chapter_7.plan.md) |
-| 8–12 | Pending | [unified.plan.md](unified.plan.md) |
+| 8 — Export layer | Complete | [chapter_8.plan.md](chapter_8.plan.md) |
+| 9–12 | Pending | [unified.plan.md](unified.plan.md) |

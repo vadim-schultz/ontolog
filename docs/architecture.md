@@ -61,6 +61,24 @@ Conflicting evidence resolves by tier priority (human suppresses lower tiers), t
 confidence within the winning tier. Each claim carries `confidence`, `evidence`, and
 `export_eligible` (from `ConfidenceThresholds.export`).
 
+## Export layer (Chapter 8)
+
+The export layer turns a `ProbabilisticDomainModel` into developer-facing artifacts. By default,
+only claims with `export_eligible=True` are included; pass `ExportOptions(include_ineligible=True)`
+or `ontolog export --all` for the full model.
+
+| Format | Module | Output |
+|--------|--------|--------|
+| Pydantic | `export/pydantic_gen.py` | Importable Python `BaseModel` source |
+| JSON Schema | `export/json_schema.py` | Draft 2020-12 schema JSON |
+| Mermaid | `export/mermaid.py` | ER diagram + state-transition diagrams |
+| Markdown | `export/markdown_report.py` | Human-readable summary |
+| GraphML | `export/graphml.py` | XML graph for NetworkX-compatible tools |
+| Neo4j CSV | `export/graphml.py` | Bulk-import CSV (requires `[graph]` extra) |
+
+`export_domain_model(model, format, options=...)` is the library entry point.
+`ontolog export <format> --store PATH` runs `build_domain_model()` then exports to stdout.
+
 ## Core principles
 
 * **Deterministic core first** — full pipeline works without any LLM
@@ -79,7 +97,7 @@ confidence within the winning tier. Each claim carries `confidence`, `evidence`,
 | `evidence/` | Evidence graph (`EvidenceGraph`, `load_evidence_graph`, `run_providers`) — see {doc}`api` |
 | `providers/` | Deterministic evidence providers (Chapter 5); semantic providers (Chapter 10) |
 | `inference/` | Event, entity, relationship, state inference (Chapter 6); aggregation (Chapter 7) |
-| `export/` | Pydantic, JSON Schema, Mermaid, GraphML (Chapter 8) |
+| `export/` | Pydantic, JSON Schema, Mermaid, GraphML export (Chapter 8) — see {doc}`export` |
 | `cli/` | Typer CLI (`ontolog`) — thin wrappers over library APIs |
 
 See [`.plans/IMPLEMENTATION_PLAN.md`](https://github.com/vadim-schultz/ontolog/blob/main/.plans/IMPLEMENTATION_PLAN.md)
