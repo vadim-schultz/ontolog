@@ -7,11 +7,14 @@ from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
     from ontolog.config import ConfidenceThresholds
     from ontolog.evidence.graph import EvidenceGraph
+    from ontolog.export.formats import ExportFormat
+    from ontolog.export.options import ExportOptions
     from ontolog.models import LogRecord
     from ontolog.models.candidate import InferenceResult
+    from ontolog.models.domain import ProbabilisticDomainModel
     from ontolog.models.finding import EvidenceFinding, ProviderInput
 
-__all__ = ["EvidenceProvider", "InferencePass", "LogParser", "Preprocessor"]
+__all__ = ["EvidenceProvider", "Exporter", "InferencePass", "LogParser", "Preprocessor"]
 
 
 class Preprocessor(Protocol):
@@ -73,4 +76,22 @@ class InferencePass(Protocol):
         thresholds: ConfidenceThresholds,
     ) -> InferenceResult:
         """Return candidates inferred from the populated graph."""
+        ...
+
+
+class Exporter(Protocol):
+    """Export a probabilistic domain model to a derived artifact."""
+
+    @property
+    def format_name(self) -> ExportFormat:
+        """Return the exporter format identifier."""
+        ...
+
+    def export(
+        self,
+        model: ProbabilisticDomainModel,
+        *,
+        options: ExportOptions,
+    ) -> str:
+        """Serialize ``model`` in this exporter's format."""
         ...

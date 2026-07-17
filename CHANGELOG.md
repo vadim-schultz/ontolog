@@ -4,6 +4,11 @@
 
 ### Added
 
+* Export layer (Chapter 8): `export_domain_model()`, five core exporters (Pydantic, JSON Schema,
+  Mermaid, Markdown, GraphML), optional Neo4j CSV behind `[graph]` extra
+* `Exporter` Protocol, `ExportFormat`, `ExportOptions`, and `export_view()` filtering
+* `ontolog export <format> --store PATH` CLI with `--all` and `--provenance` flags
+* `jsonschema` added to `[dev]` optional dependencies for schema validation tests
 * Probabilistic aggregation (Chapter 7): `ProbabilisticDomainModel`, tier-weighted
   `aggregate_inference_result()`, and `build_domain_model()` pipeline entry point
 * `EvidenceSourceTier`, `EvidenceSourceWeights` on `OntologConfig` (human > deterministic > LLM)

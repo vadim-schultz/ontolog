@@ -33,12 +33,14 @@ dependencies = [
 ontolog = "ontolog.cli.main:app"
 
 [project.optional-dependencies]
+graph = []
 dev = [
     "pytest>=8.0",
     "pytest-cov>=4.1",
     "ruff>=0.3",
     "mypy>=2.3.0",
     "hypothesis>=6.156.6",
+    "jsonschema>=4.0",
 ]
 docs = [
     "sphinx>=7.0",
@@ -96,6 +98,8 @@ ignore = ["S101"]
 "src/ontolog/models/finding.py" = ["TC001", "TC003"]
 "src/ontolog/providers/**/*.py" = ["ARG002", "TC001", "TC003", "PLR0913"]
 "src/ontolog/inference/**/*.py" = ["ARG002", "TC001", "TC003", "PLR0913"]
+"src/ontolog/export/**/*.py" = ["TC001"]
+"src/ontolog/cli/export/commands.py" = ["ARG001", "TC001", "TC003"]
 "src/ontolog/models/candidate.py" = ["TC001", "TC003"]
 "src/ontolog/models/domain.py" = ["TC001", "TC003"]
 "src/ontolog/templates/patterns.py" = ["E501"]

@@ -102,3 +102,9 @@
    :members:
    :undoc-members:
 ```
+
+```{eval-rst}
+.. automodule:: ontolog.export
+   :members:
+   :undoc-members:
+```
