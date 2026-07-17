@@ -4,6 +4,12 @@
 
 ### Added
 
+* Deterministic evidence providers: regex, statistics, co-occurrence, namespace, temporal, process
+* `EvidenceProvider` Protocol, `provider_registry()`, and `run_providers()` orchestrator
+* `EvidenceFinding`, `ProviderInput`, and `ProviderConfig` / `ProviderKind` configuration
+* Shared regex patterns in `templates/patterns.py`; `SqliteTemplateStore.list_occurrences()`
+* `load_evidence_graph(store_path, config=...)` populates graph from stored templates
+* Fixtures: `order_cooccurrence.log`, `order_lifecycle.log`
 * Evidence graph foundation: `Evidence`, `Node`, `Edge`, `NodeKind` models
 * `EvidenceGraph` (NetworkX-backed) with JSON serialization and evidence attachment
 * `load_evidence_graph()` library API for loading graphs from the SQLite store

@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS template_occurrences (
     template_id TEXT NOT NULL REFERENCES templates(id),
     timestamp TEXT,
     message TEXT NOT NULL,
-    parameters TEXT NOT NULL
+    parameters TEXT NOT NULL,
+    process TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_occurrences_template_id
@@ -38,10 +39,27 @@ WHERE id = ?
 """
 
 INSERT_OCCURRENCE = """
-INSERT INTO template_occurrences (template_id, timestamp, message, parameters)
-VALUES (?, ?, ?, ?)
+INSERT INTO template_occurrences (template_id, timestamp, message, parameters, process)
+VALUES (?, ?, ?, ?, ?)
 """
 
 LIST_TEMPLATES = "SELECT * FROM templates ORDER BY occurrence_count DESC, template ASC"
 
+LIST_OCCURRENCES = """
+SELECT template_id, timestamp, message, parameters, process
+FROM template_occurrences
+ORDER BY timestamp ASC, id ASC
+"""
+
+LIST_OCCURRENCES_BY_TEMPLATE = """
+SELECT template_id, timestamp, message, parameters, process
+FROM template_occurrences
+WHERE template_id = ?
+ORDER BY timestamp ASC, id ASC
+"""
+
 RESOLVE_TEMPLATE_ID = "SELECT id FROM templates WHERE template = ?"
+
+MIGRATE_ADD_PROCESS_COLUMN = """
+ALTER TABLE template_occurrences ADD COLUMN process TEXT
+"""

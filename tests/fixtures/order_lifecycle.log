@@ -1,0 +1,15 @@
+2024-01-15T12:00:01.000Z app-host orderservice[2001]: INFO OrderCreated status=created
+2024-01-15T12:00:02.000Z app-host orderservice[2001]: INFO OrderValidated status=validated
+2024-01-15T12:00:03.000Z app-host orderservice[2001]: INFO OrderRunning status=running
+2024-01-15T12:00:04.000Z app-host orderservice[2001]: INFO OrderCompleted status=completed
+2024-01-15T12:00:05.000Z app-host orderservice[2001]: INFO OrderCreated status=created
+2024-01-15T12:00:06.000Z app-host orderservice[2001]: INFO OrderValidated status=validated
+2024-01-15T12:00:07.000Z app-host orderservice[2001]: INFO OrderRunning status=running
+2024-01-15T12:00:08.000Z app-host orderservice[2001]: INFO OrderCompleted status=completed
+2024-01-15T12:00:09.000Z app-host orderservice[2001]: INFO OrderCreated status=created
+2024-01-15T12:00:10.000Z app-host orderservice[2001]: INFO OrderValidated status=validated
+2024-01-15T12:00:11.000Z app-host orderservice[2001]: INFO OrderRunning status=running
+2024-01-15T12:00:12.000Z app-host orderservice[2001]: INFO OrderCompleted status=completed
+2024-01-15T12:00:13.000Z app-host orderservice[2001]: INFO OrderCreated status=created
+2024-01-15T12:00:14.000Z app-host orderservice[2001]: INFO OrderValidated status=validated
+2024-01-15T12:00:15.000Z app-host orderservice[2001]: INFO OrderRunning status=running

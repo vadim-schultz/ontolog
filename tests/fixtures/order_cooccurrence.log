@@ -1,0 +1,10 @@
+2024-01-15T12:00:01.000Z app-host orderservice[2001]: INFO OrderCreated OrderID=ORD-001 CustomerID=CUST-42
+2024-01-15T12:00:01.100Z app-host orderservice[2001]: INFO OrderUpdated OrderID=ORD-001 CustomerID=CUST-42 status=validated
+2024-01-15T12:00:01.200Z app-host orderservice[2001]: INFO OrderCreated OrderID=ORD-002 CustomerID=CUST-43
+2024-01-15T12:00:01.300Z app-host orderservice[2001]: INFO OrderUpdated OrderID=ORD-002 CustomerID=CUST-43 status=validated
+2024-01-15T12:00:01.400Z app-host orderservice[2001]: INFO OrderCreated OrderID=ORD-003 CustomerID=CUST-44
+2024-01-15T12:00:01.500Z app-host orderservice[2001]: INFO OrderUpdated OrderID=ORD-003 CustomerID=CUST-44 status=validated
+2024-01-15T12:00:01.600Z app-host orderservice[2001]: INFO OrderCreated OrderID=ORD-004 CustomerID=CUST-45
+2024-01-15T12:00:01.700Z app-host orderservice[2001]: INFO OrderUpdated OrderID=ORD-004 CustomerID=CUST-45 status=validated
+2024-01-15T12:00:01.800Z app-host orderservice[2001]: INFO OrderShipped OrderID=ORD-001 tracking=TRK-001
+2024-01-15T12:00:01.900Z app-host orderservice[2001]: INFO OrderShipped OrderID=ORD-002 tracking=TRK-002

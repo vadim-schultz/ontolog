@@ -9,6 +9,7 @@ import typer
 
 from ontolog.cli.options import STORE_OPTION_HELP
 from ontolog.cli.output import echo_status
+from ontolog.config import default_config
 from ontolog.evidence import load_evidence_graph
 
 
@@ -27,5 +28,5 @@ def graph(
         typer.echo("Use --show to print graph summary.", err=True)
         raise typer.Exit(code=1)
 
-    evidence_graph = load_evidence_graph(store_path)
+    evidence_graph = load_evidence_graph(store_path, config=default_config())
     echo_status(f"nodes: {evidence_graph.node_count()}, edges: {evidence_graph.edge_count()}")

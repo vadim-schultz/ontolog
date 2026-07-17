@@ -10,6 +10,24 @@ Raw logs → Preprocessing → Drain3 templates → Evidence providers → Evide
     → Inference engine → Probabilistic domain model → Export (Pydantic, JSON Schema, Mermaid, …)
 ```
 
+## Evidence providers (Chapter 5)
+
+Deterministic providers analyze stored templates and occurrences, then populate an
+`EvidenceGraph` with nodes, edges, and provenance-backed scores:
+
+| Provider | Signals |
+|----------|---------|
+| `NamespaceProvider` | Process name → entities; template prefix → events; parameters → fields |
+| `RegexProvider` | IPv4, hex, UUID, MAC, email, URL, path, timestamp patterns on parameter values |
+| `StatisticsProvider` | Frequency, cardinality, entropy |
+| `CoOccurrenceProvider` | Parameters appearing together in the same occurrence |
+| `TemporalProvider` | Ordered template sequences by timestamp |
+| `ProcessProvider` | Repeated template subsequences (activity patterns) |
+
+Enable or disable providers via `ProviderConfig` on `OntologConfig`. The orchestrator
+`run_providers()` applies findings in a fixed order. `load_evidence_graph(store_path, config=...)`
+loads templates and occurrences from SQLite and runs the enabled providers.
+
 ## Core principles
 
 * **Deterministic core first** — full pipeline works without any LLM
@@ -25,8 +43,8 @@ Raw logs → Preprocessing → Drain3 templates → Evidence providers → Evide
 | `ingestion/` | Parsers, preprocessors, streaming reader (`ontolog ingest`) — see {doc}`ingestion` |
 | `templates/` | Drain3 adapter, masking, template store (`ontolog templates`) — see {doc}`templates` |
 | `storage/` | SQLite persistence for templates and occurrences |
-| `evidence/` | Evidence graph (`EvidenceGraph`, `load_evidence_graph`) — see {doc}`api` |
-| `providers/` | Deterministic and semantic evidence providers (Chapters 5, 10) |
+| `evidence/` | Evidence graph (`EvidenceGraph`, `load_evidence_graph`, `run_providers`) — see {doc}`api` |
+| `providers/` | Deterministic evidence providers (Chapter 5); semantic providers (Chapter 10) |
 | `inference/` | Event, entity, relationship, state inference (Chapter 6) |
 | `export/` | Pydantic, JSON Schema, Mermaid, GraphML (Chapter 8) |
 | `cli/` | Typer CLI (`ontolog`) — thin wrappers over library APIs |

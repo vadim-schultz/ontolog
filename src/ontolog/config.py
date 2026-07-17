@@ -28,6 +28,25 @@ class MaskConfig(BaseModel):
     enabled: frozenset[MaskKind] = Field(default_factory=lambda: frozenset(MaskKind))
 
 
+class ProviderKind(StrEnum):
+    """Deterministic evidence provider identifiers."""
+
+    REGEX = "regex"
+    STATISTICS = "statistics"
+    CO_OCCURRENCE = "co_occurrence"
+    NAMESPACE = "namespace"
+    TEMPORAL = "temporal"
+    PROCESS = "process"
+
+
+class ProviderConfig(BaseModel):
+    """Enable/disable deterministic evidence providers."""
+
+    model_config = ConfigDict(frozen=True)
+
+    enabled: frozenset[ProviderKind] = Field(default_factory=lambda: frozenset(ProviderKind))
+
+
 class ConfidenceThresholds(BaseModel):
     """Minimum confidence scores for inference and export eligibility."""
 
@@ -46,6 +65,7 @@ class OntologConfig(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     masks: MaskConfig = Field(default_factory=MaskConfig)
+    providers: ProviderConfig = Field(default_factory=ProviderConfig)
     confidence: ConfidenceThresholds = Field(default_factory=ConfidenceThresholds)
     storage_path: Path = Path("ontolog.db")
 

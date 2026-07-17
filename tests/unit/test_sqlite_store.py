@@ -32,17 +32,44 @@ def test_upsert_and_list(tmp_path: Path) -> None:
 def test_insert_occurrence(tmp_path: Path) -> None:
     store = SqliteTemplateStore(tmp_path / "test.db")
     store.upsert_template(Template(id="cluster_1", template="hello"))
-    store.insert_occurrence(
-        TemplateOccurrence(
-            template_id="cluster_1",
-            message="hello world",
-            parameters=(TemplateParameter(name="*", value="world"),),
-        )
+    occurrence = TemplateOccurrence(
+        template_id="cluster_1",
+        message="hello world",
+        parameters=(TemplateParameter(name="*", value="world"),),
     )
+    store.insert_occurrence(occurrence)
     row = store._connection.execute("SELECT COUNT(*) FROM template_occurrences").fetchone()
     store.close()
     assert row is not None
     assert row[0] == 1
+
+
+def test_list_occurrences(tmp_path: Path) -> None:
+    store = SqliteTemplateStore(tmp_path / "test.db")
+    store.upsert_template(Template(id="cluster_1", template="hello"))
+    first = TemplateOccurrence(
+        template_id="cluster_1",
+        timestamp=datetime(2024, 1, 15, 12, 0, 0, tzinfo=UTC),
+        message="hello one",
+        parameters=(TemplateParameter(name="x", value="1"),),
+    )
+    second = TemplateOccurrence(
+        template_id="cluster_1",
+        timestamp=datetime(2024, 1, 15, 12, 0, 1, tzinfo=UTC),
+        message="hello two",
+        parameters=(TemplateParameter(name="x", value="2"),),
+    )
+    store.insert_occurrence(first)
+    store.insert_occurrence(second)
+
+    all_occurrences = store.list_occurrences()
+    filtered = store.list_occurrences(template_id="cluster_1")
+    store.close()
+
+    assert all_occurrences == filtered
+    assert len(all_occurrences) == 2
+    assert all_occurrences[0].message == "hello one"
+    assert all_occurrences[1].parameters[0].value == "2"
 
 
 def test_reload_in_new_instance(tmp_path: Path) -> None:

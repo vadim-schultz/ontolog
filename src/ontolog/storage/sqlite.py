@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import cast
 
 from ontolog.errors import StorageError
-from ontolog.models.template import Template, TemplateOccurrence
+from ontolog.models.template import Template, TemplateOccurrence, TemplateParameter
 from ontolog.storage import queries
 
 _SCHEMA_VERSION = 1
@@ -84,12 +84,27 @@ def _template_update_params(template: Template) -> tuple[str | int | None, ...]:
     )
 
 
+def _occurrence_from_row(row: sqlite3.Row) -> TemplateOccurrence:
+    raw_params = json.loads(row["parameters"])
+    parameters = tuple(
+        TemplateParameter(name=item["name"], value=item["value"]) for item in raw_params
+    )
+    return TemplateOccurrence(
+        template_id=row["template_id"],
+        timestamp=_decode_datetime(row["timestamp"]),
+        message=row["message"],
+        parameters=parameters,
+        process=row["process"],
+    )
+
+
 def _occurrence_insert_params(occurrence: TemplateOccurrence) -> tuple[str | None, ...]:
     return (
         occurrence.template_id,
         _encode_datetime(occurrence.timestamp),
         occurrence.message,
         json.dumps([{"name": param.name, "value": param.value} for param in occurrence.parameters]),
+        occurrence.process,
     )
 
 
@@ -137,6 +152,11 @@ class SqliteTemplateStore:
             self._connection.commit()
         except sqlite3.Error as exc:
             raise StorageError(f"failed to initialize schema: {exc}", path=self._path) from exc
+        try:
+            self._connection.execute(queries.MIGRATE_ADD_PROCESS_COLUMN)
+            self._connection.commit()
+        except sqlite3.Error:
+            pass
 
     def upsert_template(self, template: Template) -> None:
         """Insert or merge a template row."""
@@ -194,6 +214,22 @@ class SqliteTemplateStore:
             raise StorageError(message, path=self._path) from exc
 
         return [_template_from_row(row) for row in rows]
+
+    def list_occurrences(self, *, template_id: str | None = None) -> list[TemplateOccurrence]:
+        """Return stored template occurrences, optionally filtered by template id."""
+        try:
+            if template_id is None:
+                rows = self._connection.execute(queries.LIST_OCCURRENCES).fetchall()
+            else:
+                rows = self._connection.execute(
+                    queries.LIST_OCCURRENCES_BY_TEMPLATE,
+                    (template_id,),
+                ).fetchall()
+        except sqlite3.Error as exc:
+            message = f"failed to list occurrences: {exc}"
+            raise StorageError(message, path=self._path) from exc
+
+        return [_occurrence_from_row(row) for row in rows]
 
     def resolve_template_id(self, template_text: str) -> str | None:
         """Return the stored template id for a mined template string, if present."""

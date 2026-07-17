@@ -66,3 +66,15 @@
    :members:
    :undoc-members:
 ```
+
+```{eval-rst}
+.. automodule:: ontolog.providers
+   :members:
+   :undoc-members:
+```
+
+```{eval-rst}
+.. automodule:: ontolog.models.finding
+   :members:
+   :undoc-members:
+```
