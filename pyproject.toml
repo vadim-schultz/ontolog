@@ -95,12 +95,14 @@ ignore = ["S101"]
 "src/ontolog/evidence/scoring.py" = ["TC003"]
 "src/ontolog/models/finding.py" = ["TC001", "TC003"]
 "src/ontolog/providers/**/*.py" = ["ARG002", "TC001", "TC003", "PLR0913"]
+"src/ontolog/inference/**/*.py" = ["ARG002", "TC001", "TC003", "PLR0913"]
+"src/ontolog/models/candidate.py" = ["TC001", "TC003"]
 "src/ontolog/templates/patterns.py" = ["E501"]
 "src/ontolog/models/template.py" = ["TC003"]
 "src/ontolog/templates/masking.py" = ["TC001", "E501"]
 "src/ontolog/templates/extractor.py" = ["TC001", "TC003", "D105", "TRY003", "EM102"]
 "src/ontolog/storage/sqlite.py" = ["TC003", "E501", "D102", "D105", "D107", "TRY003", "EM102"]
-"tests/**/*.py" = ["S101", "PLR2004", "ANN001", "ARG002", "TC001", "TC003", "D"]
+"tests/**/*.py" = ["S101", "PLR2004", "ANN001", "ARG002", "TC001", "TC003", "D", "PLC0415", "PT018", "E501"]
 "examples/**/*.py" = ["T201"]
 "benchmarks/**/*.py" = ["T201"]
 
@@ -121,6 +123,7 @@ module = "networkx"
 ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["tests"]
 markers = [
     "corpus: tests that require downloaded LogHub corpora (deselect by default)",
 ]

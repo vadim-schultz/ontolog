@@ -3,7 +3,7 @@
 Ontolog is a **library-first** probabilistic domain-model inference engine. It is not a SIEM, log
 viewer, or LLM wrapper.
 
-## Pipeline (planned)
+## Pipeline
 
 ```text
 Raw logs → Preprocessing → Drain3 templates → Evidence providers → Evidence graph
@@ -27,6 +27,23 @@ Deterministic providers analyze stored templates and occurrences, then populate 
 Enable or disable providers via `ProviderConfig` on `OntologConfig`. The orchestrator
 `run_providers()` applies findings in a fixed order. `load_evidence_graph(store_path, config=...)`
 loads templates and occurrences from SQLite and runs the enabled providers.
+
+## Inference engine (Chapter 6)
+
+Inference passes read the populated evidence graph and promote nodes/edges into structured
+candidates (`EntityCandidate`, `EventCandidate`, `FieldCandidate`, `RelationshipCandidate`,
+`StateMachineCandidate`) bundled in an `InferenceResult`:
+
+| Pass | Signals |
+|------|---------|
+| `EntityInferencePass` | Process entities; noun-phrase entities from field labels (e.g. `interface` → Interface) |
+| `EventInferencePass` | Template-prefix events with verb lexicon (send, receive, connect, create, …) |
+| `FieldInferencePass` | Parameter types from `has_type` edges; semantic names via `destination=<IP>` mapping |
+| `RelationshipInferencePass` | `owns` from `has_field` edges linking entities to structural fields |
+| `StateInferencePass` | Lifecycle transitions from status values and temporal `follows` edges |
+
+Enable or disable passes via `InferenceConfig`. `build_inference_result(store_path, config=...)`
+runs providers then inference in a fixed order.
 
 ## Core principles
 

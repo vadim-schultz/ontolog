@@ -11,6 +11,7 @@ from ontolog.cli.options import STORE_OPTION_HELP
 from ontolog.cli.output import echo_status
 from ontolog.config import default_config
 from ontolog.evidence import load_evidence_graph
+from ontolog.inference import build_inference_result
 
 
 def graph(
@@ -29,4 +30,12 @@ def graph(
         raise typer.Exit(code=1)
 
     evidence_graph = load_evidence_graph(store_path, config=default_config())
+    inference_result = build_inference_result(store_path, config=default_config())
     echo_status(f"nodes: {evidence_graph.node_count()}, edges: {evidence_graph.edge_count()}")
+    echo_status(
+        f"entities: {len(inference_result.entities)}, "
+        f"events: {len(inference_result.events)}, "
+        f"fields: {len(inference_result.fields)}, "
+        f"relationships: {len(inference_result.relationships)}, "
+        f"state_machines: {len(inference_result.state_machines)}"
+    )

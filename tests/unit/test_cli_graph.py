@@ -80,3 +80,23 @@ def test_graph_show_nonzero_after_templates(tmp_path: Path) -> None:
     graph_result = runner.invoke(app, ["graph", "--show", "--store", str(store_path)])
     assert graph_result.exit_code == 0
     assert "nodes: 0" not in graph_result.stderr
+    assert "entities:" in graph_result.stderr
+
+
+def test_graph_show_includes_candidate_counts(tmp_path: Path) -> None:
+    store_path = tmp_path / "ontolog.db"
+    templates_result = runner.invoke(
+        app,
+        [
+            "templates",
+            str(FIXTURES / "controlboard.log"),
+            "--store",
+            str(store_path),
+        ],
+    )
+    assert templates_result.exit_code == 0
+
+    graph_result = runner.invoke(app, ["graph", "--show", "--store", str(store_path)])
+    assert graph_result.exit_code == 0
+    assert "entities:" in graph_result.stderr
+    assert "entities: 0" not in graph_result.stderr

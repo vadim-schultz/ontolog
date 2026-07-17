@@ -4,6 +4,8 @@
 
 ### Added
 
+* Inference engine (Chapter 6): entity, event, field, relationship, and state-machine
+  candidates via `build_inference_result()` and `run_inference()`
 * Deterministic evidence providers: regex, statistics, co-occurrence, namespace, temporal, process
 * `EvidenceProvider` Protocol, `provider_registry()`, and `run_providers()` orchestrator
 * `EvidenceFinding`, `ProviderInput`, and `ProviderConfig` / `ProviderKind` configuration

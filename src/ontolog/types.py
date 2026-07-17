@@ -5,11 +5,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
+    from ontolog.config import ConfidenceThresholds
     from ontolog.evidence.graph import EvidenceGraph
     from ontolog.models import LogRecord
+    from ontolog.models.candidate import InferenceResult
     from ontolog.models.finding import EvidenceFinding, ProviderInput
 
-__all__ = ["EvidenceProvider", "LogParser", "Preprocessor"]
+__all__ = ["EvidenceProvider", "InferencePass", "LogParser", "Preprocessor"]
 
 
 class Preprocessor(Protocol):
@@ -52,4 +54,23 @@ class EvidenceProvider(Protocol):
         data: ProviderInput,
     ) -> tuple[EvidenceFinding, ...]:
         """Return findings to apply to the evidence graph."""
+        ...
+
+
+class InferencePass(Protocol):
+    """Promote graph evidence into structured candidates."""
+
+    @property
+    def name(self) -> str:
+        """Return the inference pass identifier."""
+        ...
+
+    def infer(
+        self,
+        graph: EvidenceGraph,
+        data: ProviderInput,
+        *,
+        thresholds: ConfidenceThresholds,
+    ) -> InferenceResult:
+        """Return candidates inferred from the populated graph."""
         ...
