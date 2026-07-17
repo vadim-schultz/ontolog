@@ -86,7 +86,19 @@
 ```
 
 ```{eval-rst}
+.. automodule:: ontolog.models.domain
+   :members:
+   :undoc-members:
+```
+
+```{eval-rst}
 .. automodule:: ontolog.inference
+   :members:
+   :undoc-members:
+```
+
+```{eval-rst}
+.. automodule:: ontolog.inference.aggregate
    :members:
    :undoc-members:
 ```

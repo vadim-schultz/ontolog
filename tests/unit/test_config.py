@@ -18,6 +18,9 @@ def test_default_config() -> None:
     assert config.confidence.entity == 0.6
     assert config.confidence.relationship == 0.6
     assert config.confidence.event == 0.5
+    assert config.source_weights.human == 1.0
+    assert config.source_weights.deterministic == 0.85
+    assert config.source_weights.llm == 0.5
     assert config.storage_path == Path("ontolog.db")
 
 

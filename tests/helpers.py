@@ -7,8 +7,9 @@ from pathlib import Path
 from ontolog.config import OntologConfig, default_config
 from ontolog.evidence import load_evidence_graph
 from ontolog.evidence.graph import EvidenceGraph
-from ontolog.inference import build_inference_result
+from ontolog.inference import aggregate_inference_result, build_inference_result
 from ontolog.models.candidate import InferenceResult
+from ontolog.models.domain import ProbabilisticDomainModel
 from ontolog.models.finding import ProviderInput
 from ontolog.storage import SqliteTemplateStore
 from ontolog.templates import ExtractOptions, extract_templates
@@ -63,3 +64,19 @@ def infer_fixture(
     store_path = tmp_path / "ontolog.db"
     extract_fixture_to_store(fixture_name, store_path)
     return build_inference_result(store_path, config=config)
+
+
+def aggregate_fixture(
+    fixture_name: str,
+    tmp_path: Path,
+    *,
+    config: OntologConfig | None = None,
+) -> ProbabilisticDomainModel:
+    """Run the full pipeline and aggregate into a domain model."""
+    config = config or default_config()
+    result = infer_fixture(fixture_name, tmp_path, config=config)
+    return aggregate_inference_result(
+        result,
+        weights=config.source_weights,
+        thresholds=config.confidence,
+    )
