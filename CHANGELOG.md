@@ -4,6 +4,10 @@
 
 ### Added
 
+* Probabilistic aggregation (Chapter 7): `ProbabilisticDomainModel`, tier-weighted
+  `aggregate_inference_result()`, and `build_domain_model()` pipeline entry point
+* `EvidenceSourceTier`, `EvidenceSourceWeights` on `OntologConfig` (human > deterministic > LLM)
+* Domain types: `Entity`, `Event`, `Field`, `Relationship`, `StateMachine` with full provenance
 * Inference engine (Chapter 6): entity, event, field, relationship, and state-machine
   candidates via `build_inference_result()` and `run_inference()`
 * Deterministic evidence providers: regex, statistics, co-occurrence, namespace, temporal, process

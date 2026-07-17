@@ -45,6 +45,22 @@ candidates (`EntityCandidate`, `EventCandidate`, `FieldCandidate`, `Relationship
 Enable or disable passes via `InferenceConfig`. `build_inference_result(store_path, config=...)`
 runs providers then inference in a fixed order.
 
+## Probabilistic aggregation (Chapter 7)
+
+Aggregation merges inference candidates into a canonical `ProbabilisticDomainModel` with
+full provenance and export eligibility:
+
+| Component | Role |
+|-----------|------|
+| `ProbabilisticDomainModel` | Frozen domain model (`Entity`, `Event`, `Field`, `Relationship`, `StateMachine`) |
+| `aggregate_inference_result()` | Tier-weighted merge with ranked alternatives |
+| `EvidenceSourceWeights` | Per-tier multipliers (`human` > `deterministic` > `LLM`) |
+| `build_domain_model()` | Full pipeline: providers → inference → aggregation |
+
+Conflicting evidence resolves by tier priority (human suppresses lower tiers), then weighted
+confidence within the winning tier. Each claim carries `confidence`, `evidence`, and
+`export_eligible` (from `ConfidenceThresholds.export`).
+
 ## Core principles
 
 * **Deterministic core first** — full pipeline works without any LLM
@@ -62,7 +78,7 @@ runs providers then inference in a fixed order.
 | `storage/` | SQLite persistence for templates and occurrences |
 | `evidence/` | Evidence graph (`EvidenceGraph`, `load_evidence_graph`, `run_providers`) — see {doc}`api` |
 | `providers/` | Deterministic evidence providers (Chapter 5); semantic providers (Chapter 10) |
-| `inference/` | Event, entity, relationship, state inference (Chapter 6) |
+| `inference/` | Event, entity, relationship, state inference (Chapter 6); aggregation (Chapter 7) |
 | `export/` | Pydantic, JSON Schema, Mermaid, GraphML (Chapter 8) |
 | `cli/` | Typer CLI (`ontolog`) — thin wrappers over library APIs |
 

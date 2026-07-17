@@ -77,6 +77,24 @@ class ConfidenceThresholds(BaseModel):
     event: float = Field(default=0.5, ge=0.0, le=1.0)
 
 
+class EvidenceSourceTier(StrEnum):
+    """Evidence provenance tier for aggregation priority."""
+
+    HUMAN = "human"
+    DETERMINISTIC = "deterministic"
+    LLM = "llm"
+
+
+class EvidenceSourceWeights(BaseModel):
+    """Per-tier multipliers applied during confidence aggregation."""
+
+    model_config = ConfigDict(frozen=True)
+
+    human: float = Field(default=1.0, ge=0.0, le=1.0)
+    deterministic: float = Field(default=0.85, ge=0.0, le=1.0)
+    llm: float = Field(default=0.5, ge=0.0, le=1.0)
+
+
 class OntologConfig(BaseModel):
     """Top-level ontolog configuration."""
 
@@ -86,6 +104,7 @@ class OntologConfig(BaseModel):
     providers: ProviderConfig = Field(default_factory=ProviderConfig)
     inference: InferenceConfig = Field(default_factory=InferenceConfig)
     confidence: ConfidenceThresholds = Field(default_factory=ConfidenceThresholds)
+    source_weights: EvidenceSourceWeights = Field(default_factory=EvidenceSourceWeights)
     storage_path: Path = Path("ontolog.db")
 
 
