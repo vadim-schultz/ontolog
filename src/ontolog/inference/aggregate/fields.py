@@ -19,6 +19,7 @@ def _field_from_primary(
     return Field(
         name=primary.name,
         graph_node_id=graph_node_id,
+        entity_slug=primary.entity_slug,
         type_name=ProbabilisticClaim(
             value=primary.type_name,
             confidence=confidence,

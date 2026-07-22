@@ -18,6 +18,17 @@ _PID_KEYS = ("pid", "process_id")
 _LEVEL_KEYS = ("level", "log_level", "severity", "PRIORITY", "syslog.priority")
 _LOGGER_KEYS = ("logger", "logger_name", "name", "syslog.tag")
 _MESSAGE_KEYS = ("event", "message", "MESSAGE", "msg", "@message")
+_RECORD_FIELD_KEYS = frozenset(
+    {
+        *_TIMESTAMP_KEYS,
+        *_HOSTNAME_KEYS,
+        *_PROCESS_KEYS,
+        *_PID_KEYS,
+        *_LEVEL_KEYS,
+        *_LOGGER_KEYS,
+        *_MESSAGE_KEYS,
+    },
+)
 _SYSLOG_PRIORITY_LEVELS: dict[int, str] = {
     0: "EMERG",
     1: "ALERT",
@@ -50,6 +61,27 @@ def _stringify_message(value: Any) -> str:
     if isinstance(value, str):
         return value
     return json.dumps(value, separators=(",", ":"), ensure_ascii=False)
+
+
+def _context_field_pairs(data: dict[str, Any]) -> tuple[str, ...]:
+    """Return ``key=value`` pairs from scalar JSON fields not mapped to LogRecord."""
+    pairs: list[str] = []
+    for key in sorted(data):
+        if key in _RECORD_FIELD_KEYS:
+            continue
+        value = data[key]
+        if isinstance(value, (str, int, float, bool)):
+            pairs.append(f"{key}={value}")
+    return tuple(pairs)
+
+
+def _message_with_context(raw_message: Any, data: dict[str, Any]) -> str:
+    """Append scalar context fields so template mining can infer parameters."""
+    message = _stringify_message(raw_message)
+    context = _context_field_pairs(data)
+    if not context:
+        return message
+    return f"{message} {' '.join(context)}"
 
 
 def _parse_level(value: object) -> str | None:
@@ -114,5 +146,5 @@ class JsonParser:
             pid=pid,
             level=level,
             logger=str(logger) if logger is not None else None,
-            message=_stringify_message(raw_message),
+            message=_message_with_context(raw_message, data),
         )

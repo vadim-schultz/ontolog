@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ontolog.config import ConfidenceThresholds
 from ontolog.evidence.graph import EvidenceGraph
+from ontolog.inference.event_nouns import event_noun_from_slug
 from ontolog.inference.queries import collect_evidence, edges_with_label, nodes_by_kind
 from ontolog.inference.scoring import combine_scores
 from ontolog.models.candidate import EntityCandidate, InferenceResult
@@ -12,6 +13,7 @@ from ontolog.models.finding import ProviderInput
 
 _INTERFACE_LABEL = "interface"
 _MIN_INTERFACE_TEMPLATES = 2
+_MIN_EVENT_NOUN_EVENTS = 2
 
 
 class EntityInferencePass:
@@ -33,6 +35,8 @@ class EntityInferencePass:
         del data  # not used, only here to satisfy the protocol
         candidates = _graph_entity_candidates(graph, thresholds.entity)
         _merge_entity_candidate(candidates, _interface_entity(graph), thresholds.entity)
+        for candidate in _event_noun_entities(graph, thresholds.entity):
+            _merge_entity_candidate(candidates, candidate, thresholds.entity)
         return InferenceResult(entities=tuple(candidates.values()))
 
 
@@ -147,3 +151,42 @@ def _template_id_from_field(field_node_id: str) -> str:
 
 def _title_case(slug: str) -> str:
     return slug.replace("_", " ").title()
+
+
+def _event_noun_entities(
+    graph: EvidenceGraph,
+    min_confidence: float,
+) -> tuple[EntityCandidate, ...]:
+    """Infer entities from shared event noun prefixes."""
+    grouped = _group_event_nodes_by_noun(graph)
+    candidates: list[EntityCandidate] = []
+    for noun, nodes in grouped.items():
+        candidate = _event_noun_candidate(noun, nodes)
+        if candidate is not None and candidate.confidence >= min_confidence:
+            candidates.append(candidate)
+    return tuple(candidates)
+
+
+def _group_event_nodes_by_noun(graph: EvidenceGraph) -> dict[str, list[Node]]:
+    """Group event nodes by extracted noun prefix."""
+    grouped: dict[str, list[Node]] = {}
+    for node in nodes_by_kind(graph, NodeKind.EVENT):
+        noun = event_noun_from_slug(node.id.removeprefix("event:"))
+        if noun is None:
+            continue
+        grouped.setdefault(noun, []).append(node)
+    return grouped
+
+
+def _event_noun_candidate(noun: str, nodes: list[Node]) -> EntityCandidate | None:
+    """Build an entity candidate when enough events share a noun prefix."""
+    if len(nodes) < _MIN_EVENT_NOUN_EVENTS:
+        return None
+    evidence = tuple(item for node in nodes for item in collect_evidence(node))
+    return EntityCandidate(
+        name=_title_case(noun),
+        slug=noun,
+        confidence=combine_scores([item.score for item in evidence]),
+        graph_node_id=f"entity:{noun}",
+        evidence=evidence,
+    )

@@ -22,3 +22,5 @@ See https://github.com/logpai/loghub/blob/master/CITATION for BibTeX.
 |------|--------|---------|
 | `apache_2k.log` | LogHub-2k | Parser + template smoke test |
 | `openssh_2k.log` | LogHub-2k | Drain3 regression |
+| `apache_2k_labels.csv` | LogHub-2.0 | Template accuracy benchmark labels |
+| `openssh_2k_labels.csv` | LogHub-2.0 | Template accuracy benchmark labels |

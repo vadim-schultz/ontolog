@@ -7,6 +7,9 @@ from dataclasses import dataclass
 _JSON_SCHEMA_STRING: dict[str, object] = {"type": "string"}
 
 _TYPE_JSON_SCHEMA: dict[str, dict[str, object]] = {
+    "int": {"type": "integer"},
+    "float": {"type": "number"},
+    "bool": {"type": "boolean"},
     "ipv4": {"type": "string", "format": "ipv4"},
     "hex": {"type": "string", "pattern": "^[0-9a-fA-F]+$"},
     "uuid": {"type": "string", "format": "uuid"},
@@ -30,6 +33,9 @@ class PythonFieldType:
 
 
 _TYPE_PYTHON: dict[str, PythonFieldType] = {
+    "int": PythonFieldType("int"),
+    "float": PythonFieldType("float"),
+    "bool": PythonFieldType("bool"),
     "ipv4": PythonFieldType(
         "IPv4Address",
         stdlib_imports=("from ipaddress import IPv4Address",),
@@ -61,6 +67,9 @@ _TYPE_PYTHON: dict[str, PythonFieldType] = {
 }
 
 _TYPE_DESCRIPTIONS: dict[str, str] = {
+    "int": "integer",
+    "float": "floating-point number",
+    "bool": "boolean",
     "ipv4": "IPv4 address",
     "hex": "hexadecimal string",
     "uuid": "UUID",
@@ -99,6 +108,8 @@ def pydantic_names_for(type_slugs: set[str]) -> tuple[str, ...]:
 
 def type_description_for(type_slug: str) -> str:
     """Return a human-readable description for ``type_slug``."""
+    if type_slug.startswith("enum:"):
+        return "lifecycle status"
     return _TYPE_DESCRIPTIONS.get(type_slug, type_slug)
 
 

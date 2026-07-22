@@ -71,6 +71,7 @@ class Field(BaseModel):
     name: str
     type_name: ProbabilisticClaim
     graph_node_id: str
+    entity_slug: str | None = None
 
 
 class Relationship(BaseModel):

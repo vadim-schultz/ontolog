@@ -6,6 +6,7 @@ from ontolog.evidence.graph import EvidenceGraph
 from ontolog.inference.queries import (
     edges_with_label,
     entity_fields,
+    entity_slug_for_field,
     field_type_name,
     max_evidence_score,
     nodes_by_kind,
@@ -66,6 +67,11 @@ def test_field_type_name() -> None:
 def test_entity_fields() -> None:
     graph = _sample_graph()
     assert entity_fields(graph, "entity:controlboard") == ("field:cluster_1:destination",)
+
+
+def test_entity_slug_for_field() -> None:
+    graph = _sample_graph()
+    assert entity_slug_for_field(graph, "field:cluster_1:destination") == "controlboard"
 
 
 def test_max_evidence_score_filtered() -> None:

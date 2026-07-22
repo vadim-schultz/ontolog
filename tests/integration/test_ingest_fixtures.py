@@ -54,5 +54,5 @@ def test_sample_jsonl_fixture() -> None:
     assert records[0].message == "service started"
     assert records[0].hostname == "app-01"
     assert records[1].hostname == "edge-01"
-    assert records[2].message == "PacketSent"
+    assert records[2].message == "PacketSent destination=192.168.1.10 interface=eth0"
     assert records[3].level == "WARNING"

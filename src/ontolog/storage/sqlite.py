@@ -133,12 +133,18 @@ def _merge_stored_template(existing: sqlite3.Row, incoming: Template) -> Templat
 class SqliteTemplateStore:
     """Persist templates and occurrences in a local SQLite database."""
 
-    def __init__(self, path: Path) -> None:
-        self._path = path
+    def __init__(self, path: Path | str, *, batch_size: int = 500) -> None:
+        self._path = Path(path) if not isinstance(path, Path) else path
+        self._batch_size = batch_size
+        self._occurrence_buffer: list[TemplateOccurrence] = []
         try:
-            self._connection = sqlite3.connect(path)
+            connect_path = str(path)
+            if connect_path.startswith("file:"):
+                self._connection = sqlite3.connect(connect_path, uri=True)
+            else:
+                self._connection = sqlite3.connect(connect_path)
         except sqlite3.Error as exc:
-            raise StorageError(f"failed to open database: {exc}", path=path) from exc
+            raise StorageError(f"failed to open database: {exc}", path=self._path) from exc
         self._connection.row_factory = sqlite3.Row
         self._initialize()
 
@@ -190,17 +196,25 @@ class SqliteTemplateStore:
             _template_update_params(template),
         )
 
-    def _insert_occurrence_row(self, occurrence: TemplateOccurrence) -> None:
-        self._connection.execute(
-            queries.INSERT_OCCURRENCE,
-            _occurrence_insert_params(occurrence),
-        )
-
     def insert_occurrence(self, occurrence: TemplateOccurrence) -> None:
-        """Insert one template occurrence row."""
+        """Buffer one template occurrence row; flush when batch size is reached."""
+        self._occurrence_buffer.append(occurrence)
+        if len(self._occurrence_buffer) >= self._batch_size:
+            self._flush_occurrences()
+
+    def flush(self) -> None:
+        """Write buffered occurrences to the database."""
+        self._flush_occurrences()
+
+    def _flush_occurrences(self) -> None:
+        """Write buffered occurrences with executemany."""
+        if not self._occurrence_buffer:
+            return
         try:
-            self._insert_occurrence_row(occurrence)
+            params = [_occurrence_insert_params(occ) for occ in self._occurrence_buffer]
+            self._connection.executemany(queries.INSERT_OCCURRENCE, params)
             self._connection.commit()
+            self._occurrence_buffer.clear()
         except sqlite3.Error as exc:
             message = f"failed to insert occurrence: {exc}"
             raise StorageError(message, path=self._path) from exc
@@ -246,7 +260,8 @@ class SqliteTemplateStore:
         return str(row["id"])
 
     def close(self) -> None:
-        """Close the database connection."""
+        """Flush buffered rows and close the database connection."""
+        self._flush_occurrences()
         self._connection.close()
 
     def __enter__(self) -> SqliteTemplateStore:

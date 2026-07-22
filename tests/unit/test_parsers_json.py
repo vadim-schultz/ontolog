@@ -53,3 +53,13 @@ def test_nested_message_stringified() -> None:
     record = JsonParser().parse_line(line, line_number=1)
 
     assert record.message == '{"detail":"nested"}'
+
+
+def test_scalar_context_fields_appended_to_message() -> None:
+    line = (
+        '{"event": "PacketSent", "level": "info", "timestamp": "2024-01-15T12:00:01.123456Z", '
+        '"interface": "eth0", "destination": "192.168.1.10"}'
+    )
+    record = JsonParser().parse_line(line, line_number=1)
+
+    assert record.message == "PacketSent destination=192.168.1.10 interface=eth0"

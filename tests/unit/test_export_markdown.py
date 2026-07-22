@@ -56,7 +56,8 @@ def test_report_omits_ineligible_by_default(tmp_path: Path) -> None:
     strict = OntologConfig(confidence=ConfidenceThresholds(export=0.99))
     model = aggregate_fixture("controlboard.log", tmp_path, config=strict)
     report = export_domain_model(model, ExportFormat.MARKDOWN)
-    assert "Controlboard" not in report
+    assert "PacketSent" not in report
+    assert "PacketReceived" not in report
 
 
 def test_report_provenance_optional(tmp_path: Path) -> None:

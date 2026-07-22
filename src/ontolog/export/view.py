@@ -28,12 +28,26 @@ class ExportView:
 
 def _filter_entities(
     entities: tuple[Entity, ...],
+    relationships: tuple[Relationship, ...],
+    fields: tuple[Field, ...],
     *,
     include_ineligible: bool,
 ) -> tuple[Entity, ...]:
     if include_ineligible:
         return entities
-    return tuple(entity for entity in entities if entity.export_eligible)
+    eligible_slugs = {entity.slug for entity in entities if entity.export_eligible}
+    name_to_slug = {entity.name: entity.slug for entity in entities}
+    for relationship in relationships:
+        if relationship.kind != "owns" or not relationship.export_eligible:
+            continue
+        parent_slug = name_to_slug.get(relationship.source_name)
+        child_slug = name_to_slug.get(relationship.target_name)
+        if child_slug in eligible_slugs and parent_slug is not None:
+            eligible_slugs.add(parent_slug)
+    for field in fields:
+        if field.type_name.export_eligible and field.entity_slug is not None:
+            eligible_slugs.add(field.entity_slug)
+    return tuple(entity for entity in entities if entity.slug in eligible_slugs)
 
 
 def _filter_events(
@@ -83,7 +97,12 @@ def export_view(
     """Return export-ready collections from ``model``."""
     include_ineligible = options.include_ineligible
     return ExportView(
-        entities=_filter_entities(model.entities, include_ineligible=include_ineligible),
+        entities=_filter_entities(
+            model.entities,
+            model.relationships,
+            model.fields,
+            include_ineligible=include_ineligible,
+        ),
         events=_filter_events(model.events, include_ineligible=include_ineligible),
         fields=_filter_fields(model.fields, include_ineligible=include_ineligible),
         relationships=_filter_relationships(
