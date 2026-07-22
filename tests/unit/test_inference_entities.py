@@ -57,3 +57,16 @@ def test_unknown_entity_not_invented() -> None:
         thresholds=default_config().confidence,
     )
     assert result.entities == ()
+
+
+def test_order_entity_from_events(tmp_path: Path) -> None:
+    graph, data = load_fixture_graph("order_lifecycle.log", tmp_path)
+    result = run_inference(
+        graph,
+        data,
+        (EntityInferencePass(),),
+        thresholds=default_config().confidence,
+    )
+    slugs = {entity.slug for entity in result.entities}
+    assert "order" in slugs
+    assert "orderservice" in slugs

@@ -8,6 +8,7 @@ from itertools import pairwise
 from ontolog.config import ConfidenceThresholds
 from ontolog.evidence.graph import EvidenceGraph
 from ontolog.inference.scoring import combine_scores
+from ontolog.inference.status_values import status_label_from_template
 from ontolog.models.candidate import InferenceResult, StateMachineCandidate, StateTransition
 from ontolog.models.evidence import Evidence
 from ontolog.models.finding import ProviderInput
@@ -142,7 +143,7 @@ def _status_value(
     template = templates_by_id.get(occurrence.template_id)
     if template is None:
         return None
-    return _template_status_label(template.template)
+    return status_label_from_template(template.template)
 
 
 def _transition_counts_from_follows(
@@ -151,7 +152,7 @@ def _transition_counts_from_follows(
 ) -> Counter[tuple[str, str]]:
     """Count transitions implied by temporal ``follows`` edges."""
     template_labels = {
-        template.id: _template_status_label(template.template) for template in templates
+        template.id: status_label_from_template(template.template) for template in templates
     }
     counts: Counter[tuple[str, str]] = Counter()
     for edge in graph.edges():
@@ -174,20 +175,6 @@ def _follows_transition(
     if left is None or right is None:
         return None
     return left, right
-
-
-def _template_status_label(template_text: str) -> str | None:
-    """Extract a lifecycle status label from template text."""
-    first_token = template_text.split(maxsplit=1)[0] if template_text else ""
-    if first_token.startswith("Order"):
-        return first_token.removeprefix("Order").lower()
-    for token in template_text.split():
-        if token.startswith("status="):
-            return token.removeprefix("status=").strip("<>").lower()
-    if " status=" in template_text:
-        _, remainder = template_text.split(" status=", maxsplit=1)
-        return remainder.split()[0].strip("<>").lower()
-    return None
 
 
 def _merge_transition_counts(

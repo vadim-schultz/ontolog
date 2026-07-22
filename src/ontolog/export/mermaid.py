@@ -4,8 +4,14 @@ from __future__ import annotations
 
 from ontolog.export.formats import ExportFormat
 from ontolog.export.options import ExportOptions
+from ontolog.export.type_map import python_type_for
 from ontolog.export.view import export_view
-from ontolog.models.domain import ProbabilisticDomainModel, Relationship, StateMachine
+from ontolog.models.domain import (
+    Field,
+    ProbabilisticDomainModel,
+    Relationship,
+    StateMachine,
+)
 
 _RELATIONSHIP_CARDINALITY: dict[str, str] = {
     "owns": "||--o{",
@@ -24,6 +30,17 @@ def _relationship_line(relationship: Relationship) -> str:
     return f"    {source} {cardinality} {target} : {relationship.kind}"
 
 
+def _entity_field_lines(entity_slug: str, fields: tuple[Field, ...]) -> list[str]:
+    """Return Mermaid ER attribute lines for ``entity_slug``."""
+    lines: list[str] = []
+    for field in fields:
+        if field.entity_slug != entity_slug:
+            continue
+        type_name = python_type_for(field.type_name.value)
+        lines.append(f"        {type_name} {field.name}")
+    return lines
+
+
 def _er_section(model: ProbabilisticDomainModel, options: ExportOptions) -> str:
     view = export_view(model, options)
     if not view.entities and not view.relationships:
@@ -31,7 +48,11 @@ def _er_section(model: ProbabilisticDomainModel, options: ExportOptions) -> str:
     lines = ["erDiagram"]
     for entity in view.entities:
         lines.append(f"    {_mermaid_id(entity.name)} {{")
-        lines.append("        string name")
+        field_lines = _entity_field_lines(entity.slug, view.fields)
+        if field_lines:
+            lines.extend(field_lines)
+        else:
+            lines.append("        string name")
         lines.append("    }")
     for relationship in view.relationships:
         lines.append(_relationship_line(relationship))

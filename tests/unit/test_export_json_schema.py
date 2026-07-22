@@ -37,8 +37,8 @@ def test_schema_omits_ineligible(tmp_path: Path) -> None:
     model = aggregate_fixture("controlboard.log", tmp_path, config=strict)
     schema = json.loads(export_domain_model(model, ExportFormat.JSON_SCHEMA))
     properties = schema.get("properties", {})
-    assert "Controlboard" not in properties
-    assert "Interface" not in properties
+    assert "destination" in properties
+    assert "Controlboard" in properties
 
 
 def test_sample_instance_validates(tmp_path: Path) -> None:

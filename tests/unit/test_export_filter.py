@@ -24,6 +24,39 @@ from ontolog.models.evidence import Evidence
 EXPORT_CONFIG = OntologConfig(confidence=ConfidenceThresholds(export=0.6))
 
 
+def test_export_view_includes_entity_with_eligible_fields() -> None:
+    """Export entities that carry export-eligible fields even when below entity threshold."""
+    from ontolog.models.domain import Entity, Field, ProbabilisticClaim, ProbabilisticDomainModel
+
+    model = ProbabilisticDomainModel(
+        entities=(
+            Entity(
+                name="Sshd",
+                slug="sshd",
+                confidence=0.68,
+                evidence=(),
+                export_eligible=False,
+            ),
+        ),
+        fields=(
+            Field(
+                name="uid",
+                graph_node_id="field:cluster_1:uid",
+                entity_slug="sshd",
+                type_name=ProbabilisticClaim(
+                    value="int",
+                    confidence=1.0,
+                    evidence=(),
+                    export_eligible=True,
+                ),
+            ),
+        ),
+    )
+    view = export_view(model, ExportOptions())
+    assert [entity.slug for entity in view.entities] == ["sshd"]
+    assert {field.name for field in view.fields} == {"uid"}
+
+
 def test_export_view_default_filters_ineligible() -> None:
     thresholds = ConfidenceThresholds(export=0.7)
     low = FieldCandidate(

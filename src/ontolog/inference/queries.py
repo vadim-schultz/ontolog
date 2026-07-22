@@ -36,6 +36,24 @@ def entity_fields(graph: EvidenceGraph, entity_node_id: str) -> tuple[str, ...]:
     return tuple(field_ids)
 
 
+def entity_slug_for_field(graph: EvidenceGraph, field_node_id: str) -> str | None:
+    """Return entity slug linked via ``has_field`` edge targeting ``field_node_id``."""
+    best_slug: str | None = None
+    best_score = -1.0
+    for edge in graph.edges():
+        if edge.target_id != field_node_id or edge.label != "has_field":
+            continue
+        source = graph.get_node(edge.source_id)
+        if source is None or source.kind != NodeKind.ENTITY:
+            continue
+        score = max((item.score for item in edge.evidence), default=0.0)
+        slug = source.id.removeprefix("entity:")
+        if score > best_score:
+            best_score = score
+            best_slug = slug
+    return best_slug
+
+
 def max_evidence_score(
     item: Node | Edge,
     *,

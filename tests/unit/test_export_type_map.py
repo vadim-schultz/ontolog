@@ -8,6 +8,7 @@ from ontolog.export.type_map import (
     python_field_type,
     python_imports_for,
     python_type_for,
+    type_description_for,
 )
 
 
@@ -46,3 +47,22 @@ def test_json_schema_for_hex_includes_pattern() -> None:
 def test_unknown_slug_falls_back_to_string() -> None:
     assert python_type_for("custom_type") == "str"
     assert json_schema_for("custom_type") == {"type": "string"}
+
+
+def test_python_field_type_int() -> None:
+    assert python_type_for("int") == "int"
+    assert type_description_for("int") == "integer"
+
+
+def test_python_field_type_float() -> None:
+    assert python_type_for("float") == "float"
+    assert type_description_for("float") == "floating-point number"
+
+
+def test_python_field_type_bool() -> None:
+    assert python_type_for("bool") == "bool"
+    assert type_description_for("bool") == "boolean"
+
+
+def test_json_schema_for_int() -> None:
+    assert json_schema_for("int") == {"type": "integer"}

@@ -43,6 +43,7 @@ class FieldCandidate(BaseModel):
     type_name: str
     confidence: Annotated[float, Field(ge=0.0, le=1.0)]
     graph_node_id: str
+    entity_slug: str | None = None
     evidence: tuple[Evidence, ...] = ()
 
 

@@ -81,3 +81,27 @@ def test_provenance_includes_regex_and_statistics(tmp_path: Path) -> None:
     destination = next(field for field in result.fields if field.name == "destination")
     sources = {evidence.source for evidence in destination.evidence}
     assert "regex" in sources
+
+
+def test_destination_entity_slug_controlboard(tmp_path: Path) -> None:
+    graph, data = load_fixture_graph("controlboard.log", tmp_path)
+    result = run_inference(
+        graph,
+        data,
+        (FieldInferencePass(),),
+        thresholds=default_config().confidence,
+    )
+    destination = next(field for field in result.fields if field.name == "destination")
+    assert destination.entity_slug == "controlboard"
+
+
+def test_star_field_excluded(tmp_path: Path) -> None:
+    graph, data = load_fixture_graph("loghub/openssh_2k.log", tmp_path)
+    result = run_inference(
+        graph,
+        data,
+        (FieldInferencePass(),),
+        thresholds=default_config().confidence,
+    )
+    field_names = {field.name for field in result.fields}
+    assert "*" not in field_names
