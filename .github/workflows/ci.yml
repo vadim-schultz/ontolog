@@ -39,6 +39,12 @@ jobs:
       - name: Pytest with coverage
         run: pytest --cov=ontolog --cov-report=xml --cov-report=term
 
+      - name: Run example scripts
+        if: matrix.python-version == '3.12'
+        run: |
+          python examples/controlboard.py
+          bash examples/basic_cli.sh
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         if: matrix.python-version == '3.12'

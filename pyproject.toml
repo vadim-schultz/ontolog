@@ -84,6 +84,7 @@ ignore = ["S101"]
 "src/ontolog/ingestion/reader.py" = ["TC001", "TC003"]
 "src/ontolog/ingestion/registry.py" = ["TC001"]
 "src/ontolog/ingestion/source_adapters.py" = ["ARG002"]
+"src/ontolog/pipeline.py" = ["TC001"]
 "src/ontolog/cli/main.py" = ["ARG001", "TC003"]
 "src/ontolog/cli/output.py" = ["TC001", "TC003"]
 "src/ontolog/cli/ingest/commands.py" = ["ARG001", "TC003", "PLR0913"]
@@ -110,6 +111,7 @@ ignore = ["S101"]
 "tests/**/*.py" = ["S101", "PLR2004", "ANN001", "ARG002", "TC001", "TC003", "D", "PLC0415", "PT018", "E501"]
 "examples/**/*.py" = ["T201"]
 "benchmarks/**/*.py" = ["T201"]
+"benchmarks/__init__.py" = ["D104", "T201"]
 
 [tool.mypy]
 python_version = "3.11"
@@ -128,7 +130,7 @@ module = "networkx"
 ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["tests"]
+pythonpath = ["tests", "benchmarks"]
 markers = [
     "corpus: tests that require downloaded LogHub corpora (deselect by default)",
 ]

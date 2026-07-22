@@ -292,4 +292,6 @@ def extract_templates(
     extractor = TemplateExtractor(config=config or default_config(), store=store)
     for record in ingest_path(source, ingest_options):
         extractor.ingest(record)
+    if store is not None:
+        store.flush()
     return extractor.templates()

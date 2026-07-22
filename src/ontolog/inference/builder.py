@@ -18,35 +18,58 @@ from ontolog.storage import SqliteTemplateStore
 
 
 def build_inference_result(
-    store_path: Path,
+    store_path: Path | str,
     *,
     config: OntologConfig,
 ) -> InferenceResult:
     """Load templates, run providers, then run inference passes."""
     store = SqliteTemplateStore(store_path)
     try:
-        templates = store.list_templates()
-        occurrences = store.list_occurrences()
-        data = ProviderInput(templates=tuple(templates), occurrences=tuple(occurrences))
-        graph = EvidenceGraph()
-        run_providers(graph, data, provider_registry(config.providers))
-        return run_inference(
-            graph,
-            data,
-            inference_registry(config.inference),
-            thresholds=config.confidence,
-        )
+        return build_inference_result_from_store(store, config=config)
     finally:
         store.close()
 
 
+def build_inference_result_from_store(
+    store: SqliteTemplateStore,
+    *,
+    config: OntologConfig,
+) -> InferenceResult:
+    """Run providers and inference passes using an open template store."""
+    templates = store.list_templates()
+    occurrences = store.list_occurrences()
+    data = ProviderInput(templates=tuple(templates), occurrences=tuple(occurrences))
+    graph = EvidenceGraph()
+    run_providers(graph, data, provider_registry(config.providers))
+    return run_inference(
+        graph,
+        data,
+        inference_registry(config.inference),
+        thresholds=config.confidence,
+    )
+
+
 def build_domain_model(
-    store_path: Path,
+    store_path: Path | str,
     *,
     config: OntologConfig,
 ) -> ProbabilisticDomainModel:
     """Run the full pipeline and aggregate candidates into a domain model."""
     result = build_inference_result(store_path, config=config)
+    return aggregate_inference_result(
+        result,
+        weights=config.source_weights,
+        thresholds=config.confidence,
+    )
+
+
+def build_domain_model_from_store(
+    store: SqliteTemplateStore,
+    *,
+    config: OntologConfig,
+) -> ProbabilisticDomainModel:
+    """Aggregate candidates from an open template store into a domain model."""
+    result = build_inference_result_from_store(store, config=config)
     return aggregate_inference_result(
         result,
         weights=config.source_weights,

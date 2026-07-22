@@ -9,6 +9,7 @@ import typer
 from ontolog import __version__
 from ontolog.cli.export import export
 from ontolog.cli.graph import graph
+from ontolog.cli.infer import infer_command
 from ontolog.cli.ingest import ingest
 from ontolog.cli.logging import setup_cli_logging
 from ontolog.cli.templates import templates
@@ -24,6 +25,7 @@ app.command("ingest")(ingest)
 app.command("templates")(templates)
 app.command("graph")(graph)
 app.command("export")(export)
+app.command("infer")(infer_command)
 
 
 def _version_callback(value: bool) -> None:
@@ -46,3 +48,7 @@ def main(
 ) -> None:
     """Ontolog — probabilistic domain-model inference from application logs."""
     setup_cli_logging()
+
+
+if __name__ == "__main__":
+    app()

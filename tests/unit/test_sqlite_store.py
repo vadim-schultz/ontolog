@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -38,6 +39,7 @@ def test_insert_occurrence(tmp_path: Path) -> None:
         parameters=(TemplateParameter(name="*", value="world"),),
     )
     store.insert_occurrence(occurrence)
+    store.flush()
     row = store._connection.execute("SELECT COUNT(*) FROM template_occurrences").fetchone()
     store.close()
     assert row is not None
@@ -61,6 +63,7 @@ def test_list_occurrences(tmp_path: Path) -> None:
     )
     store.insert_occurrence(first)
     store.insert_occurrence(second)
+    store.flush()
 
     all_occurrences = store.list_occurrences()
     filtered = store.list_occurrences(template_id="cluster_1")
@@ -126,3 +129,47 @@ def test_storage_error_has_path(tmp_path: Path) -> None:
     with pytest.raises(StorageError) as exc_info:
         SqliteTemplateStore(tmp_path / "blocked" / "test.db")
     assert exc_info.value.path == tmp_path / "blocked" / "test.db"
+
+
+def _sample_occurrence(index: int) -> TemplateOccurrence:
+    return TemplateOccurrence(
+        template_id="cluster_1",
+        message=f"hello {index}",
+        parameters=(TemplateParameter(name="x", value=str(index)),),
+    )
+
+
+def test_buffered_insert_occurrence_batches_writes(tmp_path: Path) -> None:
+    store = SqliteTemplateStore(tmp_path / "test.db", batch_size=500)
+    store.upsert_template(Template(id="cluster_1", template="hello"))
+
+    with patch.object(store, "_flush_occurrences", wraps=store._flush_occurrences) as spy:
+        for index in range(1000):
+            store.insert_occurrence(_sample_occurrence(index))
+        store.flush()
+
+    assert spy.call_count == 3
+    assert len(store.list_occurrences()) == 1000
+    store.close()
+
+
+def test_flush_writes_remaining_buffer(tmp_path: Path) -> None:
+    store = SqliteTemplateStore(tmp_path / "test.db", batch_size=500)
+    store.upsert_template(Template(id="cluster_1", template="hello"))
+    store.insert_occurrence(_sample_occurrence(1))
+
+    store.flush()
+
+    assert len(store.list_occurrences()) == 1
+    store.close()
+
+
+def test_close_auto_flushes_buffer(tmp_path: Path) -> None:
+    store = SqliteTemplateStore(tmp_path / "test.db", batch_size=500)
+    store.upsert_template(Template(id="cluster_1", template="hello"))
+    store.insert_occurrence(_sample_occurrence(1))
+    store.close()
+
+    reloaded = SqliteTemplateStore(tmp_path / "test.db")
+    assert len(reloaded.list_occurrences()) == 1
+    reloaded.close()

@@ -12,6 +12,7 @@ architecture
 export
 ingestion
 templates
+benchmarks
 api
 releasing
 ```

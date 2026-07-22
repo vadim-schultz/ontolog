@@ -3,6 +3,7 @@
 from ontolog.config import OntologConfig, default_config
 from ontolog.errors import ConfigError, OntologError, ParseError, TemplateError
 from ontolog.models import LogRecord
+from ontolog.pipeline import infer
 
 __version__ = "0.0.1"
 
@@ -15,4 +16,5 @@ __all__ = [
     "TemplateError",
     "__version__",
     "default_config",
+    "infer",
 ]

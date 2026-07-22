@@ -55,6 +55,19 @@ sphinx-build -W -b html docs docs/_build
 
 Pull requests should keep CI green (Ruff, Mypy, Pytest, Sphinx `-W`).
 
+## Corpus tests
+
+Optional integration tests use LogHub datasets (not in default CI):
+
+1. Download integration-tier datasets: `python scripts/fetch_corpora.py --tier integration`
+2. Run tests: `pytest -m corpus`
+
+Corpus tests are documented but not required for PR merges.
+
+Each inference run should use a dedicated SQLite store. Mixing unrelated log sources in
+one database is not supported; `ontolog infer` defaults to `--fresh` to overwrite an
+existing store path.
+
 ## Code coverage (Codecov)
 
 CI uploads `coverage.xml` to [Codecov](https://codecov.io) on Python 3.12.
