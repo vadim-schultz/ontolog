@@ -22,7 +22,7 @@ classifiers = [
 ]
 dependencies = [
     "drain3>=0.9.11",
-    "networkx>=3.0",
+    "networkx>=3.6.1",
     "pydantic>=2.0",
     "rich>=13.0",
     "typer>=0.12",
