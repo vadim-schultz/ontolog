@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ontolog.storage import SqliteTemplateStore
-from ontolog.templates import ExtractOptions, extract_templates
+from ontolog.templates.extractor import ExtractOptions, extract_templates
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 

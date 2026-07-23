@@ -36,6 +36,10 @@ def test_help() -> None:
     assert result.exit_code == 0
     assert "ontolog" in output.lower()
     assert "--version" in output
+    assert "infer" in output.lower()
+    assert "ingest" not in output.lower()
+    assert "templates" not in output.lower()
+    assert "graph" not in output.lower()
 
 
 def test_no_args_shows_help() -> None:

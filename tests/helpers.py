@@ -8,12 +8,13 @@ from ontolog.config import OntologConfig, default_config
 from ontolog.evidence import load_evidence_graph
 from ontolog.evidence.graph import EvidenceGraph
 from ontolog.export import ExportFormat, ExportOptions, export_domain_model
-from ontolog.inference import aggregate_inference_result, build_inference_result
+from ontolog.inference import aggregate_inference_result
+from ontolog.inference.builder import build_inference_result
 from ontolog.models.candidate import InferenceResult
 from ontolog.models.domain import ProbabilisticDomainModel
 from ontolog.models.finding import ProviderInput
 from ontolog.storage import SqliteTemplateStore
-from ontolog.templates import ExtractOptions, extract_templates
+from ontolog.templates.extractor import ExtractOptions, extract_templates
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 

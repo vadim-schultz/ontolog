@@ -6,7 +6,7 @@ from pathlib import Path
 
 from helpers import extract_fixture_to_store
 from ontolog.config import InferenceConfig, InferenceKind, default_config
-from ontolog.inference import build_inference_result
+from ontolog.inference.builder import build_inference_result
 
 
 def test_build_inference_result_runs_pipeline(tmp_path: Path) -> None:

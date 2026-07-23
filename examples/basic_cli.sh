@@ -3,7 +3,6 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 FIXTURE="tests/fixtures/controlboard.log"
-STORE="example_cli.db"
 
 if command -v ontolog >/dev/null 2>&1; then
   ONTOLOG=(ontolog)
@@ -15,17 +14,12 @@ else
   ONTOLOG=(python -m ontolog.cli.main)
 fi
 
-echo "==> Inferring domain model from $FIXTURE"
-"${ONTOLOG[@]}" infer "$FIXTURE" --store "$STORE"
+echo "==> Exporting domain model as Mermaid ER diagram"
+"${ONTOLOG[@]}" infer "$FIXTURE" --format mermaid
 
 echo ""
-echo "==> Exporting as Mermaid ER diagram"
-"${ONTOLOG[@]}" export mermaid --store "$STORE"
+echo "==> Exporting domain model as JSON Schema"
+"${ONTOLOG[@]}" infer "$FIXTURE" --format json-schema
 
 echo ""
-echo "==> Exporting as JSON Schema"
-"${ONTOLOG[@]}" export json-schema --store "$STORE"
-
-rm -f "$STORE"
-echo ""
-echo "==> Done. See docs/cli.md for more examples."
+echo "==> Done. See docs/export.md for more examples."

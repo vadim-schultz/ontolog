@@ -6,15 +6,36 @@ The domain model remains the source of truth; exports are filtered views of that
 ## Library API
 
 ```python
-from pathlib import Path
+from ontolog import infer
 
-from ontolog.config import default_config
-from ontolog.export import ExportFormat, ExportOptions, export_domain_model
-from ontolog.inference import build_domain_model
+output = infer("tests/fixtures/controlboard.log", format="mermaid")
+print(output.artifact)
+print(len(output.model.entities))
+```
 
-model = build_domain_model(Path("ontolog.db"), config=default_config())
+Pass `ExportOptions` for filtering:
+
+```python
+from ontolog import infer
+from ontolog.export import ExportOptions
+
+output = infer(
+    "app.log",
+    format="markdown",
+    export_options=ExportOptions(include_ineligible=True, include_provenance=True),
+)
+```
+
+### Debugging: export an existing model
+
+```python
+from ontolog.export import ExportFormat, export_domain_model
+from ontolog.inference.builder import build_domain_model_from_store
+from ontolog.storage import SqliteTemplateStore
+
+with SqliteTemplateStore("ontolog.db") as store:
+    model = build_domain_model_from_store(store)
 source = export_domain_model(model, ExportFormat.PYDANTIC)
-schema = export_domain_model(model, ExportFormat.JSON_SCHEMA)
 ```
 
 ### `ExportOptions`
@@ -27,21 +48,17 @@ schema = export_domain_model(model, ExportFormat.JSON_SCHEMA)
 ## CLI
 
 ```bash
-# Extract templates into a store (prerequisite)
-ontolog templates tests/fixtures/controlboard.log --store ontolog.db
-
-# Export formats
-ontolog export pydantic --store ontolog.db
-ontolog export json-schema --store ontolog.db
-ontolog export mermaid --store ontolog.db
-ontolog export markdown --store ontolog.db
-ontolog export graphml --store ontolog.db
+ontolog infer tests/fixtures/controlboard.log --format mermaid
+ontolog infer tests/fixtures/controlboard.log --format pydantic
+ontolog infer tests/fixtures/controlboard.log --format json-schema
+ontolog infer tests/fixtures/controlboard.log --format markdown
+ontolog infer tests/fixtures/controlboard.log --format graphml
 
 # Include ineligible claims
-ontolog export markdown --store ontolog.db --all
+ontolog infer tests/fixtures/controlboard.log --format markdown --all
 
 # Neo4j bulk-import CSV (requires pip install ontolog[graph])
-ontolog export neo4j-csv --store ontolog.db --output-dir ./neo4j-import
+ontolog infer tests/fixtures/controlboard.log --format neo4j-csv --output-dir ./neo4j-import
 ```
 
 ## Formats

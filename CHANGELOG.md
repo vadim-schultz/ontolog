@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Changed
+
+* **BREAKING:** Public CLI collapsed to `ontolog infer PATH --format EXPORT` only; removed
+  `ingest`, `templates`, `export`, and `graph` commands
+* **BREAKING:** `ontolog.infer()` now requires `format` (export format) and returns `InferOutput`
+  with `.model` and `.artifact`; removed `store_path` and `fresh` parameters
+* **BREAKING:** `--format` on the CLI now selects export format; input log format is `--log-format`
+* Each infer run uses an ephemeral in-memory store (no `--store` or `--fresh`)
+
 ### Added
 
 * Export layer (Chapter 8): `export_domain_model()`, five core exporters (Pydantic, JSON Schema,

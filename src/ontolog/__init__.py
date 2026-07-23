@@ -3,12 +3,13 @@
 from ontolog.config import OntologConfig, default_config
 from ontolog.errors import ConfigError, OntologError, ParseError, TemplateError
 from ontolog.models import LogRecord
-from ontolog.pipeline import infer
+from ontolog.pipeline import InferOutput, infer
 
 __version__ = "0.0.1"
 
 __all__ = [
     "ConfigError",
+    "InferOutput",
     "LogRecord",
     "OntologConfig",
     "OntologError",

@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 from ontolog.storage import SqliteTemplateStore
-from ontolog.templates import ExtractOptions, extract_templates
+from ontolog.templates.extractor import ExtractOptions, extract_templates
 
 
 def benchmark_file(log_path: Path) -> dict[str, float]:
