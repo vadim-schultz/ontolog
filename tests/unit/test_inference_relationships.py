@@ -18,11 +18,13 @@ def test_owns_from_has_field(tmp_path: Path) -> None:
         (RelationshipInferencePass(),),
         thresholds=default_config().confidence,
     )
-    owns = next(
-        relationship for relationship in result.relationships if relationship.kind == "owns"
-    )
-    assert owns.source_name == "Controlboard"
-    assert owns.target_name == "Interface"
+    owns = {
+        (relationship.source_name, relationship.target_name)
+        for relationship in result.relationships
+        if relationship.kind == "owns"
+    }
+    assert ("Controlboard", "Packet") in owns
+    assert ("Packet", "Interface") in owns
 
 
 def test_owns_confidence(tmp_path: Path) -> None:

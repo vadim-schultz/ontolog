@@ -23,8 +23,12 @@ def test_controlboard_inference_mvp(tmp_path: Path) -> None:
     assert destination.type_name == "ipv4" and destination.confidence >= 0.95
     assert payload.type_name == "hex" and payload.confidence >= 0.95
 
-    owns = next(
-        relationship for relationship in result.relationships if relationship.kind == "owns"
-    )
-    assert owns.source_name == "Controlboard"
-    assert owns.target_name == "Interface"
+    owns = {
+        (relationship.source_name, relationship.target_name)
+        for relationship in result.relationships
+        if relationship.kind == "owns"
+    }
+    assert ("Controlboard", "Packet") in owns
+    assert ("Packet", "Interface") in owns
+    destination = next(field for field in result.fields if field.name == "destination")
+    assert destination.entity_slug == "interface"

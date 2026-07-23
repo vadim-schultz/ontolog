@@ -1,11 +1,28 @@
-{% if entities %}
-# Entities
+{% macro render_entity_tree(entity, depth=0) -%}
+{{ "#" * (depth + 1) }} {{ entity.name }}
 
-{% for entity in entities %}
-- **{{ entity.name }}** — confidence {{ entity.confidence | confidence_pct }}{% if include_provenance and entity.provenance %}
+- confidence {{ entity.confidence | confidence_pct }}{% if include_provenance and entity.provenance %}
 {% for line in entity.provenance %}
 {{ line }}
 {% endfor %}{% endif %}
+{% if entity.fields %}
+{% for field in entity.fields %}
+- **{{ field.name }}** → `{{ field.type_value }}` (confidence {{ field.type_confidence | confidence_pct }}){% for alternative in field.alternatives %}
+  - alternative `{{ alternative.value }}` ({{ alternative.confidence | confidence_pct }}){% endfor %}{% if include_provenance and field.provenance %}
+{% for line in field.provenance %}
+{{ line }}
+{% endfor %}{% endif %}
+{% endfor %}
+{% endif %}
+{% for child in entity.children %}
+{{ render_entity_tree(child, depth + 1) }}
+{% endfor %}
+{%- endmacro %}
+{% if entity_trees %}
+# Entities
+
+{% for entity in entity_trees %}
+{{ render_entity_tree(entity) }}
 {% endfor %}
 
 {% endif %}
@@ -20,10 +37,10 @@
 {% endfor %}
 
 {% endif %}
-{% if fields %}
-# Fields
+{% if unscoped_fields %}
+# Unscoped fields
 
-{% for field in fields %}
+{% for field in unscoped_fields %}
 - **{{ field.name }}** → `{{ field.type_value }}` (confidence {{ field.type_confidence | confidence_pct }}){% for alternative in field.alternatives %}
   - alternative `{{ alternative.value }}` ({{ alternative.confidence | confidence_pct }}){% endfor %}{% if include_provenance and field.provenance %}
 {% for line in field.provenance %}

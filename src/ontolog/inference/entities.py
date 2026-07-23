@@ -2,17 +2,25 @@
 
 from __future__ import annotations
 
+from collections import Counter
+
 from ontolog.config import ConfidenceThresholds
 from ontolog.evidence.graph import EvidenceGraph
 from ontolog.inference.event_nouns import event_noun_from_slug
+from ontolog.inference.hierarchy import (
+    STRUCTURAL_FIELD_LABELS,
+    build_hierarchy_index,
+    ordered_entity_chain,
+)
 from ontolog.inference.queries import collect_evidence, edges_with_label, nodes_by_kind
 from ontolog.inference.scoring import combine_scores
 from ontolog.models.candidate import EntityCandidate, InferenceResult
 from ontolog.models.evidence import Evidence, Node, NodeKind
 from ontolog.models.finding import ProviderInput
+from ontolog.providers.ids import slugify
 
 _INTERFACE_LABEL = "interface"
-_MIN_INTERFACE_TEMPLATES = 2
+_MIN_STRUCTURAL_TEMPLATES = 2
 _MIN_EVENT_NOUN_EVENTS = 2
 
 
@@ -32,10 +40,12 @@ class EntityInferencePass:
         thresholds: ConfidenceThresholds,
     ) -> InferenceResult:
         """Return entity candidates."""
-        del data  # not used, only here to satisfy the protocol
         candidates = _graph_entity_candidates(graph, thresholds.entity)
-        _merge_entity_candidate(candidates, _interface_entity(graph), thresholds.entity)
+        for label in STRUCTURAL_FIELD_LABELS:
+            _merge_entity_candidate(candidates, _structural_entity(graph, label), thresholds.entity)
         for candidate in _event_noun_entities(graph, thresholds.entity):
+            _merge_entity_candidate(candidates, candidate, thresholds.entity)
+        for candidate in _hierarchy_entities(graph, data, thresholds.entity):
             _merge_entity_candidate(candidates, candidate, thresholds.entity)
         return InferenceResult(entities=tuple(candidates.values()))
 
@@ -75,48 +85,47 @@ def _promote_entity_node(node: Node) -> EntityCandidate:
     )
 
 
-def _interface_entity(graph: EvidenceGraph) -> EntityCandidate | None:
-    """Infer an ``Interface`` entity from ``interface`` field labels in the graph."""
-    field_nodes = _interface_field_nodes(graph)
-    if not field_nodes or not _interface_signal_sufficient(graph, field_nodes):
+def _structural_entity(graph: EvidenceGraph, label: str) -> EntityCandidate | None:
+    """Infer an entity promoted from a structural field label."""
+    field_nodes = _structural_field_nodes(graph, label)
+    if not field_nodes or not _structural_signal_sufficient(graph, field_nodes):
         return None
-    return _build_interface_candidate(graph, field_nodes)
+    return _build_structural_candidate(graph, label, field_nodes)
 
 
-def _interface_field_nodes(graph: EvidenceGraph) -> tuple[Node, ...]:
-    """Return field nodes whose label is ``interface``."""
+def _structural_field_nodes(graph: EvidenceGraph, label: str) -> tuple[Node, ...]:
+    """Return field nodes whose label matches ``label``."""
+    lowered = label.lower()
     return tuple(
-        node
-        for node in nodes_by_kind(graph, NodeKind.FIELD)
-        if node.label.lower() == _INTERFACE_LABEL
+        node for node in nodes_by_kind(graph, NodeKind.FIELD) if node.label.lower() == lowered
     )
 
 
-def _interface_signal_sufficient(
+def _structural_signal_sufficient(
     graph: EvidenceGraph,
     field_nodes: tuple[Node, ...],
 ) -> bool:
-    """Return whether interface fields are linked or span enough templates."""
-    if _interface_has_field_link(graph, field_nodes):
+    """Return whether structural fields are linked or span enough templates."""
+    if _structural_has_field_link(graph, field_nodes):
         return True
     template_ids = {_template_id_from_field(node.id) for node in field_nodes}
-    return len(template_ids) >= _MIN_INTERFACE_TEMPLATES
+    return len(template_ids) >= _MIN_STRUCTURAL_TEMPLATES
 
 
-def _interface_has_field_link(
+def _structural_has_field_link(
     graph: EvidenceGraph,
     field_nodes: tuple[Node, ...],
 ) -> bool:
-    """Return whether any interface field has a ``has_field`` edge."""
+    """Return whether any structural field has a ``has_field`` edge."""
     field_ids = {node.id for node in field_nodes}
     return any(edge.target_id in field_ids for edge in edges_with_label(graph, "has_field"))
 
 
-def _interface_evidence_scores(
+def _structural_evidence_scores(
     graph: EvidenceGraph,
     field_nodes: tuple[Node, ...],
 ) -> list[float]:
-    """Collect evidence scores from interface fields and their ``has_field`` edges."""
+    """Collect evidence scores from structural fields and their ``has_field`` edges."""
     scores = [evidence.score for node in field_nodes for evidence in node.evidence]
     field_ids = {node.id for node in field_nodes}
     for edge in edges_with_label(graph, "has_field"):
@@ -125,28 +134,89 @@ def _interface_evidence_scores(
     return scores
 
 
-def _interface_field_evidence(field_nodes: tuple[Node, ...]) -> tuple[Evidence, ...]:
-    """Return provenance attached to interface field nodes."""
+def _structural_field_evidence(field_nodes: tuple[Node, ...]) -> tuple[Evidence, ...]:
+    """Return provenance attached to structural field nodes."""
     return tuple(evidence for node in field_nodes for evidence in node.evidence)
 
 
-def _build_interface_candidate(
+def _build_structural_candidate(
     graph: EvidenceGraph,
+    label: str,
     field_nodes: tuple[Node, ...],
 ) -> EntityCandidate:
-    """Build the Interface entity candidate from supporting field nodes."""
+    """Build a structural entity candidate from supporting field nodes."""
+    slug = label.lower()
     return EntityCandidate(
-        name="Interface",
-        slug=_INTERFACE_LABEL,
-        confidence=combine_scores(_interface_evidence_scores(graph, field_nodes)),
-        graph_node_id=f"entity:{_INTERFACE_LABEL}",
-        evidence=_interface_field_evidence(field_nodes),
+        name=_title_case(slug),
+        slug=slug,
+        confidence=combine_scores(_structural_evidence_scores(graph, field_nodes)),
+        graph_node_id=f"entity:{slug}",
+        evidence=_structural_field_evidence(field_nodes),
     )
+
+
+def _interface_entity(graph: EvidenceGraph) -> EntityCandidate | None:
+    """Infer an ``Interface`` entity from ``interface`` field labels in the graph."""
+    return _structural_entity(graph, _INTERFACE_LABEL)
 
 
 def _template_id_from_field(field_node_id: str) -> str:
     _, template_id, _param = field_node_id.split(":", maxsplit=2)
     return template_id
+
+
+def _hierarchy_entities(
+    graph: EvidenceGraph,
+    data: ProviderInput,
+    min_confidence: float,
+) -> tuple[EntityCandidate, ...]:
+    """Promote entity slugs referenced by template-order hierarchy."""
+    index = build_hierarchy_index(data)
+    process_by_template = _process_slug_by_template(data)
+    slugs: set[str] = set()
+    for parent_slug, child_slug in index.owns_edges:
+        slugs.add(parent_slug)
+        slugs.add(child_slug)
+    for template in data.templates:
+        process_slug = process_by_template.get(template.id)
+        slugs.update(ordered_entity_chain(template.template, process_slug=process_slug))
+    candidates: list[EntityCandidate] = []
+    for slug in sorted(slugs):
+        candidate = _hierarchy_entity_candidate(graph, slug)
+        if candidate is not None and candidate.confidence >= min_confidence:
+            candidates.append(candidate)
+    return tuple(candidates)
+
+
+def _process_slug_by_template(data: ProviderInput) -> dict[str, str]:
+    """Return the most common process slug for each template id."""
+    counts: dict[str, Counter[str]] = {}
+    for occurrence in data.occurrences:
+        if occurrence.process is None:
+            continue
+        slug = slugify(occurrence.process)
+        counts.setdefault(occurrence.template_id, Counter())[slug] += 1
+    return {template_id: counter.most_common(1)[0][0] for template_id, counter in counts.items()}
+
+
+def _hierarchy_entity_candidate(graph: EvidenceGraph, slug: str) -> EntityCandidate | None:
+    """Build an entity candidate for a hierarchy slug when not already promoted."""
+    node = graph.get_node(f"entity:{slug}")
+    if node is not None:
+        return _promote_entity_node(node)
+    return EntityCandidate(
+        name=_title_case(slug),
+        slug=slug,
+        confidence=0.65,
+        graph_node_id=f"entity:{slug}",
+        evidence=(
+            Evidence(
+                source="namespace",
+                score=0.65,
+                explanation=f"Entity {slug!r} inferred from template occurrence order",
+            ),
+        ),
+    )
 
 
 def _title_case(slug: str) -> str:

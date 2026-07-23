@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from ontolog.export.formats import ExportFormat
+from ontolog.export.layout import EntityLayout, entity_layout
 from ontolog.export.options import ExportOptions
 from ontolog.export.rendering.renderer import Renderer
 from ontolog.export.rendering.templating import Jinja2Renderer
@@ -28,14 +29,6 @@ def _provenance_lines(evidence: tuple[Evidence, ...]) -> list[str]:
     return [f"- `{item.source}` ({item.score:.2f}): {item.explanation}" for item in evidence]
 
 
-def _entity_context(entity: Entity, *, include_provenance: bool) -> dict[str, object]:
-    return {
-        "name": entity.name,
-        "confidence": entity.confidence,
-        "provenance": _provenance_lines(entity.evidence) if include_provenance else [],
-    }
-
-
 def _event_context(event: Event, *, include_provenance: bool) -> dict[str, object]:
     verbs = ", ".join(sorted(event.verbs)) if event.verbs else "none"
     return {
@@ -50,6 +43,7 @@ def _field_context(field: Field, *, include_provenance: bool) -> dict[str, objec
     claim = field.type_name
     return {
         "name": field.name,
+        "entity_slug": field.entity_slug,
         "type_value": claim.value,
         "type_confidence": claim.confidence,
         "alternatives": [
@@ -57,6 +51,30 @@ def _field_context(field: Field, *, include_provenance: bool) -> dict[str, objec
             for alternative in claim.alternatives
         ],
         "provenance": _provenance_lines(claim.evidence) if include_provenance else [],
+    }
+
+
+def _entity_tree_context(
+    entity: Entity,
+    layout: EntityLayout,
+    *,
+    include_provenance: bool,
+) -> dict[str, object]:
+    """Return a nested entity context including owned fields and children."""
+    children = [
+        _entity_tree_context(child, layout, include_provenance=include_provenance)
+        for child_slug in layout.children_by_slug.get(entity.slug, ())
+        if (child := layout.slug_to_entity.get(child_slug)) is not None
+    ]
+    return {
+        "name": entity.name,
+        "confidence": entity.confidence,
+        "fields": [
+            _field_context(field, include_provenance=include_provenance)
+            for field in layout.fields_for(entity.slug)
+        ],
+        "children": children,
+        "provenance": _provenance_lines(entity.evidence) if include_provenance else [],
     }
 
 
@@ -89,18 +107,27 @@ def _state_machine_context(
 
 def _render_context(view: ExportView, options: ExportOptions) -> Mapping[str, object]:
     include_provenance = options.include_provenance
+    layout = entity_layout(view)
+    unscoped_fields = [
+        _field_context(field, include_provenance=include_provenance)
+        for field in view.fields
+        if field.entity_slug is None
+    ]
     return {
         "include_provenance": include_provenance,
-        "entities": [
-            _entity_context(entity, include_provenance=include_provenance)
-            for entity in view.entities
+        "entity_trees": [
+            _entity_tree_context(
+                layout.slug_to_entity[root_slug],
+                layout,
+                include_provenance=include_provenance,
+            )
+            for root_slug in layout.root_slugs
+            if root_slug in layout.slug_to_entity
         ],
         "events": [
             _event_context(event, include_provenance=include_provenance) for event in view.events
         ],
-        "fields": [
-            _field_context(field, include_provenance=include_provenance) for field in view.fields
-        ],
+        "unscoped_fields": unscoped_fields,
         "relationships": [
             _relationship_context(relationship, include_provenance=include_provenance)
             for relationship in view.relationships

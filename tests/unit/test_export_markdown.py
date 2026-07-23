@@ -20,8 +20,19 @@ def test_report_lists_entities(tmp_path: Path) -> None:
     model = aggregate_fixture("controlboard.log", tmp_path, config=EXPORT_CONFIG)
     report = export_domain_model(model, ExportFormat.MARKDOWN)
     assert "# Entities" in report
-    assert "Controlboard" in report
+    assert "# Controlboard" in report
+    assert "## Packet" in report
+    assert "### Interface" in report
+    assert "destination" in report
     assert "confidence" in report
+
+
+def test_report_groups_fields_under_entity(tmp_path: Path) -> None:
+    model = aggregate_fixture("controlboard.log", tmp_path, config=EXPORT_CONFIG)
+    report = export_domain_model(model, ExportFormat.MARKDOWN)
+    interface_index = report.index("### Interface")
+    destination_index = report.index("destination")
+    assert interface_index < destination_index
 
 
 def test_report_lists_fields_with_alternatives() -> None:

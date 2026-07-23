@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from ontolog.evidence.graph import EvidenceGraph
+from ontolog.inference.hierarchy import build_hierarchy_index
 from ontolog.models.evidence import Edge, Evidence, Node, NodeKind
+from ontolog.models.finding import ProviderInput
 
 
 def nodes_by_kind(graph: EvidenceGraph, kind: NodeKind) -> tuple[Node, ...]:
@@ -36,7 +38,21 @@ def entity_fields(graph: EvidenceGraph, entity_node_id: str) -> tuple[str, ...]:
     return tuple(field_ids)
 
 
-def entity_slug_for_field(graph: EvidenceGraph, field_node_id: str) -> str | None:
+def entity_slug_for_field(
+    graph: EvidenceGraph,
+    field_node_id: str,
+    *,
+    data: ProviderInput | None = None,
+) -> str | None:
+    """Return owning entity slug from template order or ``has_field`` edges."""
+    if data is not None:
+        owner = build_hierarchy_index(data).owner_for_field_node(field_node_id)
+        if owner is not None:
+            return owner
+    return _entity_slug_from_has_field(graph, field_node_id)
+
+
+def _entity_slug_from_has_field(graph: EvidenceGraph, field_node_id: str) -> str | None:
     """Return entity slug linked via ``has_field`` edge targeting ``field_node_id``."""
     best_slug: str | None = None
     best_score = -1.0

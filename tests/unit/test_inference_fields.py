@@ -83,7 +83,7 @@ def test_provenance_includes_regex_and_statistics(tmp_path: Path) -> None:
     assert "regex" in sources
 
 
-def test_destination_entity_slug_controlboard(tmp_path: Path) -> None:
+def test_destination_entity_slug_interface(tmp_path: Path) -> None:
     graph, data = load_fixture_graph("controlboard.log", tmp_path)
     result = run_inference(
         graph,
@@ -92,7 +92,7 @@ def test_destination_entity_slug_controlboard(tmp_path: Path) -> None:
         thresholds=default_config().confidence,
     )
     destination = next(field for field in result.fields if field.name == "destination")
-    assert destination.entity_slug == "controlboard"
+    assert destination.entity_slug == "interface"
 
 
 def test_star_field_excluded(tmp_path: Path) -> None:

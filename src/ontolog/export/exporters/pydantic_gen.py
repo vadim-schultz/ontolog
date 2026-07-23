@@ -75,22 +75,6 @@ def _owns_children(
     return {parent_slug: list(child_map.items()) for parent_slug, child_map in children.items()}
 
 
-def _relocate_owned_fields(
-    fields_by_slug: dict[str | None, tuple[Field, ...]],
-    owns_map: dict[str, list[tuple[str, Relationship]]],
-) -> dict[str | None, tuple[Field, ...]]:
-    relocated: dict[str | None, list[Field]] = {
-        slug: list(fields) for slug, fields in fields_by_slug.items()
-    }
-    for parent_slug, child_entries in owns_map.items():
-        parent_fields = relocated.pop(parent_slug, [])
-        if not parent_fields:
-            continue
-        for child_slug, _relationship in child_entries:
-            relocated.setdefault(child_slug, []).extend(parent_fields)
-    return {slug: tuple(fields) for slug, fields in relocated.items()}
-
-
 def _entity_emit_order(
     entities: tuple[Entity, ...],
     owns_map: dict[str, list[tuple[str, Relationship]]],
@@ -229,10 +213,7 @@ def _enum_class_blocks(enum_names: dict[str, str]) -> list[str]:
 def _pydantic_layout(view: ExportView) -> _PydanticLayout:
     """Group export view data for Pydantic source generation."""
     owns_map = _owns_children(view.relationships, view.entities)
-    fields_by_slug = _relocate_owned_fields(
-        _group_fields_by_entity(view.fields),
-        owns_map,
-    )
+    fields_by_slug = _group_fields_by_entity(view.fields)
     return _PydanticLayout(
         entities=view.entities,
         fields=view.fields,
