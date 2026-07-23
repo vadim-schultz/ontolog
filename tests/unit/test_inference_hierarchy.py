@@ -103,4 +103,3 @@ def test_chained_owns_relationships(tmp_path: Path) -> None:
     assert ("Controlboard", "Packet") in owns
     assert ("Packet", "Interface") in owns
     assert ("Controlboard", "Interface") not in owns
-

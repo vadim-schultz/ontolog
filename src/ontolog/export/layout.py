@@ -29,9 +29,7 @@ def entity_layout(view: ExportView) -> EntityLayout:
     fields_by_slug = _group_fields_by_entity(view.fields)
     children_by_slug = _children_by_parent(view.relationships, slug_to_entity)
     child_slugs = {child for children in children_by_slug.values() for child in children}
-    root_slugs = tuple(
-        entity.slug for entity in view.entities if entity.slug not in child_slugs
-    )
+    root_slugs = tuple(entity.slug for entity in view.entities if entity.slug not in child_slugs)
     return EntityLayout(
         entities=view.entities,
         fields_by_slug=fields_by_slug,

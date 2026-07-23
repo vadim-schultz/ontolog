@@ -28,9 +28,9 @@ def test_schema_has_entity_definitions(tmp_path: Path) -> None:
 def test_schema_field_types_nested_under_interface(tmp_path: Path) -> None:
     model = aggregate_fixture("controlboard.log", tmp_path, config=EXPORT_CONFIG)
     schema = json.loads(export_domain_model(model, ExportFormat.JSON_SCHEMA))
-    interface = (
-        schema["properties"]["Controlboard"]["properties"]["packet"]["properties"]["interface"]
-    )
+    interface = schema["properties"]["Controlboard"]["properties"]["packet"]["properties"][
+        "interface"
+    ]
     destination = interface["properties"]["destination"]
     payload = interface["properties"]["payload"]
     assert destination["format"] == "ipv4"
