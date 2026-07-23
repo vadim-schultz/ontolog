@@ -12,14 +12,14 @@ from ontolog import infer
 def benchmark_inference(log_path: Path) -> dict[str, float]:
     """Return end-to-end inference timing for ``log_path``."""
     start = time.perf_counter()
-    model = infer(log_path, store_path=":memory:", fresh=True)
+    output = infer(log_path, format="markdown")
     total_ms = (time.perf_counter() - start) * 1000
 
     return {
         "total_ms": total_ms,
-        "entity_count": float(len(model.entities)),
-        "event_count": float(len(model.events)),
-        "field_count": float(len(model.fields)),
+        "entity_count": float(len(output.model.entities)),
+        "event_count": float(len(output.model.events)),
+        "field_count": float(len(output.model.fields)),
     }
 
 

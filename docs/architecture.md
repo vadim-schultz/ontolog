@@ -65,7 +65,7 @@ confidence within the winning tier. Each claim carries `confidence`, `evidence`,
 
 The export layer turns a `ProbabilisticDomainModel` into developer-facing artifacts. By default,
 only claims with `export_eligible=True` are included; pass `ExportOptions(include_ineligible=True)`
-or `ontolog export --all` for the full model.
+or `ExportOptions(include_ineligible=True)` or `ontolog infer --all` for the full model.
 
 | Format | Module | Output |
 |--------|--------|--------|
@@ -76,8 +76,9 @@ or `ontolog export --all` for the full model.
 | GraphML | `export/graphml.py` | XML graph for NetworkX-compatible tools |
 | Neo4j CSV | `export/graphml.py` | Bulk-import CSV (requires `[graph]` extra) |
 
-`export_domain_model(model, format, options=...)` is the library entry point.
-`ontolog export <format> --store PATH` runs `build_domain_model()` then exports to stdout.
+`export_domain_model(model, format, options=...)` is the library entry point for exporting an
+existing model. The public path is `ontolog.infer(source, format=...)`, which runs the full
+pipeline and returns an `InferOutput` with `.model` and `.artifact`.
 
 ## Core principles
 
@@ -91,8 +92,8 @@ or `ontolog export --all` for the full model.
 
 | Module | Responsibility |
 |--------|----------------|
-| `ingestion/` | Parsers, preprocessors, streaming reader (`ontolog ingest`) — see {doc}`ingestion` |
-| `templates/` | Drain3 adapter, masking, template store (`ontolog templates`) — see {doc}`templates` |
+| `ingestion/` | Parsers, preprocessors, streaming reader — see {doc}`ingestion` |
+| `templates/` | Drain3 adapter, masking, template store — see {doc}`templates` |
 | `storage/` | SQLite persistence for templates and occurrences |
 | `evidence/` | Evidence graph (`EvidenceGraph`, `load_evidence_graph`, `run_providers`) — see {doc}`api` |
 | `providers/` | Deterministic evidence providers (Chapter 5); semantic providers (Chapter 10) |

@@ -19,9 +19,9 @@ pytest
 
 ## Current status
 
-Chapter 0 provides the package skeleton, test harness, and CI/CD baseline. The inference pipeline
-(`ontolog ingest`, `ontolog infer`, exporters) arrives in Chapters 1–9 per
-{doc}`architecture`.
+The public CLI exposes a single command: `ontolog infer PATH --format EXPORT`. The library entry
+point is `ontolog.infer()`, which runs ingestion, template extraction, inference, and export in one
+ephemeral pass. See {doc}`export` and {doc}`architecture`.
 
 ## Verify installation
 

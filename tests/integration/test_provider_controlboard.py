@@ -7,7 +7,7 @@ from pathlib import Path
 from ontolog.config import default_config
 from ontolog.evidence import load_evidence_graph
 from ontolog.storage import SqliteTemplateStore
-from ontolog.templates import ExtractOptions, extract_templates
+from ontolog.templates.extractor import ExtractOptions, extract_templates
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 

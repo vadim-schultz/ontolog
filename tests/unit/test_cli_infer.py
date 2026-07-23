@@ -5,123 +5,99 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 from typer.testing import CliRunner
 
 from ontolog.cli.main import app
-from ontolog.errors import ParseError
+from ontolog.export import ExportOptions
 from ontolog.models.domain import ProbabilisticDomainModel
+from ontolog.pipeline import InferOutput
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 runner = CliRunner()
 
 
-def test_cli_infer_calls_library_infer(tmp_path: Path) -> None:
-    store_path = tmp_path / "ontolog.db"
-    model = ProbabilisticDomainModel()
+def test_cli_infer_requires_format() -> None:
+    result = runner.invoke(app, ["infer", str(FIXTURES / "controlboard.log")])
 
-    with patch("ontolog.cli.infer.commands.infer", return_value=model) as mock_infer:
+    assert result.exit_code != 0
+
+
+def test_cli_infer_rejects_unknown_format() -> None:
+    result = runner.invoke(
+        app,
+        ["infer", str(FIXTURES / "controlboard.log"), "--format", "not-a-format"],
+    )
+
+    assert result.exit_code != 0
+
+
+def test_cli_infer_help_lists_export_formats() -> None:
+    result = runner.invoke(app, ["infer", "--help"])
+
+    assert result.exit_code == 0
+    assert "pydantic|json-schema|" in result.stdout
+
+
+def test_cli_infer_prints_mermaid_to_stdout() -> None:
+    result = runner.invoke(
+        app,
+        ["infer", str(FIXTURES / "controlboard.log"), "--format", "mermaid"],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "erDiagram" in result.stdout
+
+
+def test_cli_infer_log_format_option() -> None:
+    result = runner.invoke(
+        app,
+        [
+            "infer",
+            str(FIXTURES / "controlboard.log"),
+            "--format",
+            "markdown",
+            "--log-format",
+            "plain",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert result.stdout
+
+
+def test_cli_infer_all_and_provenance_flags() -> None:
+    model = ProbabilisticDomainModel()
+    output = InferOutput(model=model, artifact="report")
+
+    with patch("ontolog.cli.infer.commands.infer", return_value=output) as mock_infer:
         result = runner.invoke(
             app,
             [
                 "infer",
                 str(FIXTURES / "controlboard.log"),
-                "--store",
-                str(store_path),
+                "--format",
+                "markdown",
+                "--all",
+                "--provenance",
             ],
         )
 
     assert result.exit_code == 0, result.output
-    mock_infer.assert_called_once()
-    assert mock_infer.call_args.args[0] == FIXTURES / "controlboard.log"
-    assert mock_infer.call_args.args[1] == store_path
+    export_options = mock_infer.call_args.kwargs["export_options"]
+    assert isinstance(export_options, ExportOptions)
+    assert export_options.include_ineligible is True
+    assert export_options.include_provenance is True
 
 
 def test_cli_infer_with_nonexistent_path_fails(tmp_path: Path) -> None:
-    with patch(
-        "ontolog.cli.infer.commands.infer",
-        side_effect=ParseError("failed to read source"),
-    ):
-        result = runner.invoke(
-            app,
-            [
-                "infer",
-                str(tmp_path / "missing.log"),
-                "--store",
-                str(tmp_path / "ontolog.db"),
-            ],
-        )
+    result = runner.invoke(
+        app,
+        [
+            "infer",
+            str(tmp_path / "missing.log"),
+            "--format",
+            "mermaid",
+        ],
+    )
 
     assert result.exit_code != 0
-    assert "failed to read source" in result.output
-
-
-def test_cli_infer_with_custom_store_path(tmp_path: Path) -> None:
-    store_path = tmp_path / "custom.db"
-    model = ProbabilisticDomainModel()
-
-    with patch("ontolog.cli.infer.commands.infer", return_value=model) as mock_infer:
-        result = runner.invoke(
-            app,
-            [
-                "infer",
-                str(FIXTURES / "controlboard.log"),
-                "--store",
-                str(store_path),
-            ],
-        )
-
-    assert result.exit_code == 0
-    assert mock_infer.call_args.args[1] == store_path
-
-
-def test_cli_infer_with_custom_format(tmp_path: Path) -> None:
-    store_path = tmp_path / "ontolog.db"
-    model = ProbabilisticDomainModel()
-
-    with patch("ontolog.cli.infer.commands.infer", return_value=model) as mock_infer:
-        result = runner.invoke(
-            app,
-            [
-                "infer",
-                str(FIXTURES / "controlboard.log"),
-                "--store",
-                str(store_path),
-                "--format",
-                "plain",
-            ],
-        )
-
-    assert result.exit_code == 0
-    assert mock_infer.call_args.kwargs["format"].name == "PLAIN"
-
-
-@pytest.mark.parametrize(
-    ("args", "expected_fresh"),
-    [
-        (["--fresh"], True),
-        (["--no-fresh"], False),
-    ],
-)
-def test_cli_infer_fresh_flag(
-    tmp_path: Path,
-    args: list[str],
-    expected_fresh: bool,
-) -> None:
-    store_path = tmp_path / "ontolog.db"
-    model = ProbabilisticDomainModel()
-
-    with patch("ontolog.cli.infer.commands.infer", return_value=model) as mock_infer:
-        result = runner.invoke(
-            app,
-            [
-                "infer",
-                str(FIXTURES / "controlboard.log"),
-                "--store",
-                str(store_path),
-                *args,
-            ],
-        )
-
-    assert result.exit_code == 0
-    assert mock_infer.call_args.kwargs["fresh"] is expected_fresh

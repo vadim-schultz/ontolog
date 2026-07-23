@@ -33,7 +33,7 @@ All mask kinds are enabled by default. Disable kinds by passing a subset to `Mas
 from pathlib import Path
 
 from ontolog.storage import SqliteTemplateStore
-from ontolog.templates import ExtractOptions, extract_templates
+from ontolog.templates.extractor import ExtractOptions, extract_templates
 
 templates = extract_templates(
     Path("tests/fixtures/controlboard.log"),
@@ -54,21 +54,6 @@ templates = extract_templates(
 )
 store.close()
 ```
-
-## CLI
-
-```bash
-# Summary table on stdout; status on stderr
-ontolog templates tests/fixtures/controlboard.log
-
-# Persist to SQLite (default: ontolog.db)
-ontolog templates tests/fixtures/controlboard.log --store my.db
-
-# In-memory only
-ontolog templates tests/fixtures/controlboard.log --no-store
-```
-
-Ingest options (`--format`, `--skip-errors`, `--limit`, `--preprocessor`) are also supported.
 
 ## SQLite schema
 

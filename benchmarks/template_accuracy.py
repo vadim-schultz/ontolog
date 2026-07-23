@@ -8,7 +8,7 @@ from pathlib import Path
 
 from metrics import compute_clustering_f1
 from ontolog.storage import SqliteTemplateStore
-from ontolog.templates import ExtractOptions, extract_templates
+from ontolog.templates.extractor import ExtractOptions, extract_templates
 
 
 def load_loghub2k_labels(csv_path: Path) -> dict[str, str]:

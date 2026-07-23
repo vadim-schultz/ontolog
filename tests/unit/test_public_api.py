@@ -2,42 +2,31 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+import pytest
 
 from helpers import FIXTURES
-from ontolog import infer
+from ontolog import InferOutput, infer
 from ontolog.config import default_config
 from ontolog.ingestion.formats import LogFormat
-from ontolog.models.domain import ProbabilisticDomainModel
 
 
-def test_infer_creates_model_from_log(tmp_path: Path) -> None:
-    model = infer(
-        FIXTURES / "controlboard.log",
-        tmp_path / "ontolog.db",
-    )
+@pytest.mark.parametrize("export_format", ["mermaid", "markdown", "json-schema"])
+def test_infer_returns_infer_output(export_format: str) -> None:
+    output = infer(FIXTURES / "controlboard.log", format=export_format)
 
-    assert isinstance(model, ProbabilisticDomainModel)
-    assert len(model.entities) >= 2
-    assert len(model.events) >= 3
+    assert isinstance(output, InferOutput)
+    assert output.artifact
+    assert len(output.model.entities) >= 2
+    assert len(output.model.events) >= 3
 
 
-def test_infer_uses_custom_config(tmp_path: Path) -> None:
+def test_infer_uses_custom_config() -> None:
     config = default_config()
-    model = infer(
+    output = infer(
         FIXTURES / "controlboard.log",
-        tmp_path / "ontolog.db",
+        format="markdown",
         config=config,
-        format=LogFormat.PLAIN,
+        log_format=LogFormat.PLAIN,
     )
 
-    assert len(model.fields) >= 1
-
-
-def test_infer_overwrites_existing_store(tmp_path: Path) -> None:
-    store_path = tmp_path / "ontolog.db"
-
-    first = infer(FIXTURES / "controlboard.log", store_path)
-    second = infer(FIXTURES / "order_lifecycle.log", store_path)
-
-    assert first.entities != second.entities or first.events != second.events
+    assert len(output.model.fields) >= 1

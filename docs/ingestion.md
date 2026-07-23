@@ -5,14 +5,14 @@ template extraction and inference.
 
 ## Supported formats
 
-| CLI `--format` | Description | Examples |
+| CLI `--log-format` | Description | Examples |
 |----------------|-------------|----------|
 | `syslog` | RFC3164, ISO8601 syslog, Apache error brackets | OpenSSH, controlboard fixture |
 | `json` | JSON Lines (one object per line) | Generic JSONL, journald, structlog `JSONRenderer` |
 | `plain` | Entire line becomes `message` | Unstructured text, structlog console/logfmt output |
 | `auto` | Sample first 20 lines and detect (default) | Mixed directories |
 
-### JSONL dialects (`--format json`)
+### JSONL dialects (`--log-format json`)
 
 | Dialect | Message field | Notes |
 |---------|---------------|-------|
@@ -20,24 +20,31 @@ template extraction and inference.
 | journald | `MESSAGE`, `_HOSTNAME`, `PRIORITY` | `journalctl -o json` export |
 | [structlog](https://www.structlog.org/en/stable/index.html) | `event` | `JSONRenderer` output; not a runtime dependency |
 
-structlog **ConsoleRenderer** and **LogfmtRenderer** are plain text — use `--format plain`.
+structlog **ConsoleRenderer** and **LogfmtRenderer** are plain text — use `--log-format plain`.
 
-## CLI
+## CLI options on `ontolog infer`
 
-```bash
-ontolog ingest PATH [--format syslog|json|plain|auto] [--preprocessor NAME]... [--skip-errors] [--limit N]
-```
+Use `--log-format` to control ingestion (`syslog`, `json`, `plain`, `auto`). Additional ingest
+options (`--preprocessor`, `--skip-errors`, `--limit`) are also available on `ontolog infer`.
 
-`PATH` may be a file, a directory of log files (`.log`, `.txt`, `.jsonl`, `.ndjson`,
-`.json`, `.out`), or `-` for stdin. Output is JSON
-Lines on stdout (one `LogRecord` per line).
-
-## Python API
+For standalone ingestion without inference, use the Python API below.
 
 ```python
 from ontolog.ingestion import IngestOptions, LogFormat, ingest_path
 
 for record in ingest_path("app.log", IngestOptions(format=LogFormat.AUTO)):
+    print(record.model_dump_json())
+```
+
+Preprocessor example:
+
+```python
+from ontolog.ingestion import IngestOptions, LogFormat, ingest_path
+
+for record in ingest_path(
+    "app.log",
+    IngestOptions(format=LogFormat.AUTO, preprocessors=("strip_k8s",)),
+):
     print(record.message)
 ```
 
@@ -66,11 +73,7 @@ for record in ingest_path("pod.log", registry=registry):
     ...
 ```
 
-CLI: append preprocessors after the built-in `strip` step:
-
-```bash
-ontolog ingest app.log --preprocessor strip_k8s
-```
+Or pass preprocessors via `ontolog infer --preprocessor strip_k8s`.
 
 ## Fixtures
 

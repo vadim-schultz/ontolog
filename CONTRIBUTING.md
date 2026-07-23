@@ -64,9 +64,9 @@ Optional integration tests use LogHub datasets (not in default CI):
 
 Corpus tests are documented but not required for PR merges.
 
-Each inference run should use a dedicated SQLite store. Mixing unrelated log sources in
-one database is not supported; `ontolog infer` defaults to `--fresh` to overwrite an
-existing store path.
+Each `ontolog infer` run uses an ephemeral in-memory store. Mixing unrelated log sources in one
+persisted database is not part of the public API; use the internal template store modules when
+debugging step-by-step pipelines.
 
 ## Code coverage (Codecov)
 
