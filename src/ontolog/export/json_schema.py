@@ -2,37 +2,42 @@
 
 from __future__ import annotations
 
-import json
+from dataclasses import dataclass, field
+from typing import cast
 
 from ontolog.export.formats import ExportFormat
+from ontolog.export.formatting import confidence_suffix
 from ontolog.export.options import ExportOptions
+from ontolog.export.renderer import JsonRenderer, Renderer
 from ontolog.export.type_map import json_schema_for
 from ontolog.export.view import ExportView, export_view
 from ontolog.models.domain import Entity, Field, ProbabilisticDomainModel
+from ontolog.types import JsonValue
 
 
-def _entity_def(entity: Entity) -> dict[str, object]:
+def _entity_def(entity: Entity) -> dict[str, JsonValue]:
     return {
         "type": "object",
-        "description": f"Inferred entity (confidence={entity.confidence:.2f})",
+        "description": f"Inferred entity {confidence_suffix(entity.confidence)}",
         "additionalProperties": False,
     }
 
 
-def _field_property(field: Field) -> dict[str, object]:
+def _field_property(field: Field) -> dict[str, JsonValue]:
     schema = json_schema_for(field.type_name.value)
     schema["description"] = (
-        f"Inferred field type {field.type_name.value} (confidence={field.type_name.confidence:.2f})"
+        f"Inferred field type {field.type_name.value} "
+        f"{confidence_suffix(field.type_name.confidence)}"
     )
-    return schema
+    return cast("dict[str, JsonValue]", schema)
 
 
-def _build_schema(view: ExportView) -> dict[str, object]:
-    properties: dict[str, object] = {}
+def _build_schema(view: ExportView) -> dict[str, JsonValue]:
+    properties: dict[str, JsonValue] = {}
     for entity in view.entities:
         properties[entity.name] = _entity_def(entity)
-    for field in view.fields:
-        properties[field.name] = _field_property(field)
+    for domain_field in view.fields:
+        properties[domain_field.name] = _field_property(domain_field)
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
@@ -41,13 +46,12 @@ def _build_schema(view: ExportView) -> dict[str, object]:
     }
 
 
+@dataclass(frozen=True)
 class JsonSchemaExporter:
     """Export a domain model as JSON Schema."""
 
-    @property
-    def format_name(self) -> ExportFormat:
-        """Return the exporter format identifier."""
-        return ExportFormat.JSON_SCHEMA
+    format_name: ExportFormat = ExportFormat.JSON_SCHEMA
+    renderer: Renderer[JsonValue] = field(default_factory=JsonRenderer)
 
     def export(
         self,
@@ -57,4 +61,4 @@ class JsonSchemaExporter:
     ) -> str:
         """Serialize ``model`` as JSON Schema."""
         view = export_view(model, options)
-        return json.dumps(_build_schema(view), indent=2)
+        return self.renderer.render(_build_schema(view))

@@ -13,4 +13,6 @@ class ExportFormat(StrEnum):
     MERMAID = "mermaid"
     MARKDOWN = "markdown"
     GRAPHML = "graphml"
-    NEO4J_CSV = "neo4j-csv"
+    DOMAIN_JSON = "domain-json"
+    EVIDENCE_GRAPH = "evidence-graph"
+    FULL = "full"

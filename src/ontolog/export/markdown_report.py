@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
 from ontolog.export.formats import ExportFormat
 from ontolog.export.options import ExportOptions
+from ontolog.export.renderer import Renderer
+from ontolog.export.templating import Jinja2Renderer
 from ontolog.export.view import ExportView, export_view
 from ontolog.models.domain import (
     Entity,
@@ -15,127 +20,106 @@ from ontolog.models.domain import (
 )
 from ontolog.models.evidence import Evidence
 
-
-def _confidence_pct(value: float) -> str:
-    return f"{value * 100:.0f}%"
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 def _provenance_lines(evidence: tuple[Evidence, ...]) -> list[str]:
     return [f"- `{item.source}` ({item.score:.2f}): {item.explanation}" for item in evidence]
 
 
-def _section_entities(entities: tuple[Entity, ...], *, include_provenance: bool) -> str:
-    if not entities:
-        return ""
-    lines = ["# Entities", ""]
-    for entity in entities:
-        lines.append(f"- **{entity.name}** — confidence {_confidence_pct(entity.confidence)}")
-        if include_provenance and entity.evidence:
-            lines.extend(_provenance_lines(entity.evidence))
-    lines.append("")
-    return "\n".join(lines)
+def _entity_context(entity: Entity, *, include_provenance: bool) -> dict[str, object]:
+    return {
+        "name": entity.name,
+        "confidence": entity.confidence,
+        "provenance": _provenance_lines(entity.evidence) if include_provenance else [],
+    }
 
 
-def _section_events(events: tuple[Event, ...], *, include_provenance: bool) -> str:
-    if not events:
-        return ""
-    lines = ["# Events", ""]
-    for event in events:
-        verbs = ", ".join(sorted(event.verbs)) if event.verbs else "none"
-        lines.append(
-            f"- **{event.name}** — confidence {_confidence_pct(event.confidence)}; verbs: {verbs}",
-        )
-        if include_provenance and event.evidence:
-            lines.extend(_provenance_lines(event.evidence))
-    lines.append("")
-    return "\n".join(lines)
+def _event_context(event: Event, *, include_provenance: bool) -> dict[str, object]:
+    verbs = ", ".join(sorted(event.verbs)) if event.verbs else "none"
+    return {
+        "name": event.name,
+        "confidence": event.confidence,
+        "verbs": verbs,
+        "provenance": _provenance_lines(event.evidence) if include_provenance else [],
+    }
 
 
-def _section_fields(fields: tuple[Field, ...], *, include_provenance: bool) -> str:
-    if not fields:
-        return ""
-    lines = ["# Fields", ""]
-    for field in fields:
-        claim = field.type_name
-        lines.append(
-            f"- **{field.name}** → `{claim.value}` "
-            f"(confidence {_confidence_pct(claim.confidence)})",
-        )
-        for alternative in claim.alternatives:
-            lines.append(
-                f"  - alternative `{alternative.value}` "
-                f"({_confidence_pct(alternative.confidence)})",
-            )
-        if include_provenance and claim.evidence:
-            lines.extend(_provenance_lines(claim.evidence))
-    lines.append("")
-    return "\n".join(lines)
+def _field_context(field: Field, *, include_provenance: bool) -> dict[str, object]:
+    claim = field.type_name
+    return {
+        "name": field.name,
+        "type_value": claim.value,
+        "type_confidence": claim.confidence,
+        "alternatives": [
+            {"value": alternative.value, "confidence": alternative.confidence}
+            for alternative in claim.alternatives
+        ],
+        "provenance": _provenance_lines(claim.evidence) if include_provenance else [],
+    }
 
 
-def _section_relationships(
-    relationships: tuple[Relationship, ...],
+def _relationship_context(
+    relationship: Relationship,
     *,
     include_provenance: bool,
-) -> str:
-    if not relationships:
-        return ""
-    lines = ["# Relationships", ""]
-    for relationship in relationships:
-        lines.append(
-            f"- **{relationship.source_name}** "
-            f"{relationship.kind} **{relationship.target_name}** "
-            f"— confidence {_confidence_pct(relationship.confidence)}",
-        )
-        if include_provenance and relationship.evidence:
-            lines.extend(_provenance_lines(relationship.evidence))
-    lines.append("")
-    return "\n".join(lines)
+) -> dict[str, object]:
+    return {
+        "source_name": relationship.source_name,
+        "target_name": relationship.target_name,
+        "kind": relationship.kind,
+        "confidence": relationship.confidence,
+        "provenance": _provenance_lines(relationship.evidence) if include_provenance else [],
+    }
 
 
-def _section_state_machines(
-    state_machines: tuple[StateMachine, ...],
+def _state_machine_context(
+    machine: StateMachine,
     *,
     include_provenance: bool,
-) -> str:
-    if not state_machines:
-        return ""
-    lines = ["# State machines", ""]
-    for machine in state_machines:
-        lines.append(
-            f"- **{machine.name}** — confidence {_confidence_pct(machine.confidence)}",
-        )
-        states = ", ".join(machine.states)
-        lines.append(f"  - states: {states}")
-        if include_provenance and machine.evidence:
-            lines.extend(_provenance_lines(machine.evidence))
-    lines.append("")
-    return "\n".join(lines)
+) -> dict[str, object]:
+    return {
+        "name": machine.name,
+        "confidence": machine.confidence,
+        "states": ", ".join(machine.states),
+        "provenance": _provenance_lines(machine.evidence) if include_provenance else [],
+    }
 
 
-def _build_report(view: ExportView, options: ExportOptions) -> str:
-    sections = [
-        _section_entities(view.entities, include_provenance=options.include_provenance),
-        _section_events(view.events, include_provenance=options.include_provenance),
-        _section_fields(view.fields, include_provenance=options.include_provenance),
-        _section_relationships(
-            view.relationships,
-            include_provenance=options.include_provenance,
-        ),
-        _section_state_machines(
-            view.state_machines,
-            include_provenance=options.include_provenance,
-        ),
-    ]
-    return "\n".join(section for section in sections if section).rstrip() + "\n"
+def _render_context(view: ExportView, options: ExportOptions) -> Mapping[str, object]:
+    include_provenance = options.include_provenance
+    return {
+        "include_provenance": include_provenance,
+        "entities": [
+            _entity_context(entity, include_provenance=include_provenance)
+            for entity in view.entities
+        ],
+        "events": [
+            _event_context(event, include_provenance=include_provenance) for event in view.events
+        ],
+        "fields": [
+            _field_context(field, include_provenance=include_provenance) for field in view.fields
+        ],
+        "relationships": [
+            _relationship_context(relationship, include_provenance=include_provenance)
+            for relationship in view.relationships
+        ],
+        "state_machines": [
+            _state_machine_context(machine, include_provenance=include_provenance)
+            for machine in view.state_machines
+        ],
+    }
 
 
+@dataclass(frozen=True)
 class MarkdownReportExporter:
     """Export a domain model as a Markdown report."""
 
-    @property
-    def format_name(self) -> ExportFormat:
-        """Return the exporter format identifier."""
-        return ExportFormat.MARKDOWN
+    format_name: ExportFormat = ExportFormat.MARKDOWN
+    renderer: Renderer[Mapping[str, object]] = field(
+        default_factory=lambda: Jinja2Renderer("markdown_report.md.j2"),
+    )
 
     def export(
         self,
@@ -145,4 +129,5 @@ class MarkdownReportExporter:
     ) -> str:
         """Return a Markdown report for ``model``."""
         view = export_view(model, options)
-        return _build_report(view, options)
+        report = self.renderer.render(_render_context(view, options))
+        return report.rstrip() + "\n"

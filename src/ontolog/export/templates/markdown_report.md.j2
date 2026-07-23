@@ -1,0 +1,57 @@
+{% if entities %}
+# Entities
+
+{% for entity in entities %}
+- **{{ entity.name }}** — confidence {{ entity.confidence | confidence_pct }}{% if include_provenance and entity.provenance %}
+{% for line in entity.provenance %}
+{{ line }}
+{% endfor %}{% endif %}
+{% endfor %}
+
+{% endif %}
+{% if events %}
+# Events
+
+{% for event in events %}
+- **{{ event.name }}** — confidence {{ event.confidence | confidence_pct }}; verbs: {{ event.verbs }}{% if include_provenance and event.provenance %}
+{% for line in event.provenance %}
+{{ line }}
+{% endfor %}{% endif %}
+{% endfor %}
+
+{% endif %}
+{% if fields %}
+# Fields
+
+{% for field in fields %}
+- **{{ field.name }}** → `{{ field.type_value }}` (confidence {{ field.type_confidence | confidence_pct }}){% for alternative in field.alternatives %}
+  - alternative `{{ alternative.value }}` ({{ alternative.confidence | confidence_pct }}){% endfor %}{% if include_provenance and field.provenance %}
+{% for line in field.provenance %}
+{{ line }}
+{% endfor %}{% endif %}
+{% endfor %}
+
+{% endif %}
+{% if relationships %}
+# Relationships
+
+{% for relationship in relationships %}
+- **{{ relationship.source_name }}** {{ relationship.kind }} **{{ relationship.target_name }}** — confidence {{ relationship.confidence | confidence_pct }}{% if include_provenance and relationship.provenance %}
+{% for line in relationship.provenance %}
+{{ line }}
+{% endfor %}{% endif %}
+{% endfor %}
+
+{% endif %}
+{% if state_machines %}
+# State machines
+
+{% for machine in state_machines %}
+- **{{ machine.name }}** — confidence {{ machine.confidence | confidence_pct }}
+  - states: {{ machine.states }}{% if include_provenance and machine.provenance %}
+{% for line in machine.provenance %}
+{{ line }}
+{% endfor %}{% endif %}
+{% endfor %}
+
+{% endif %}

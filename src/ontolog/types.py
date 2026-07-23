@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Protocol
 
+JsonValue = str | int | float | bool | None | list["JsonValue"] | dict[str, "JsonValue"]
+
 if TYPE_CHECKING:
     from ontolog.config import ConfidenceThresholds
     from ontolog.evidence.graph import EvidenceGraph
@@ -14,7 +16,14 @@ if TYPE_CHECKING:
     from ontolog.models.domain import ProbabilisticDomainModel
     from ontolog.models.finding import EvidenceFinding, ProviderInput
 
-__all__ = ["EvidenceProvider", "Exporter", "InferencePass", "LogParser", "Preprocessor"]
+__all__ = [
+    "EvidenceProvider",
+    "Exporter",
+    "GraphExporter",
+    "InferencePass",
+    "LogParser",
+    "Preprocessor",
+]
 
 
 class Preprocessor(Protocol):
@@ -94,4 +103,24 @@ class Exporter(Protocol):
         options: ExportOptions,
     ) -> str:
         """Serialize ``model`` in this exporter's format."""
+        ...
+
+
+class GraphExporter(Protocol):
+    """Export a domain model with evidence graph context."""
+
+    @property
+    def format_name(self) -> ExportFormat:
+        """Return the exporter format identifier."""
+        ...
+
+    def export(
+        self,
+        model: ProbabilisticDomainModel,
+        *,
+        graph: EvidenceGraph,
+        data: ProviderInput,
+        options: ExportOptions,
+    ) -> str:
+        """Serialize ``model`` and graph context in this exporter's format."""
         ...

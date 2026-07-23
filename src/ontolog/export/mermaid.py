@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
 from ontolog.export.formats import ExportFormat
 from ontolog.export.options import ExportOptions
+from ontolog.export.renderer import Renderer
+from ontolog.export.templating import Jinja2Renderer
 from ontolog.export.type_map import python_type_for
-from ontolog.export.view import export_view
-from ontolog.models.domain import (
-    Field,
-    ProbabilisticDomainModel,
-    Relationship,
-    StateMachine,
-)
+from ontolog.export.view import ExportView, export_view
+from ontolog.models.domain import Field, ProbabilisticDomainModel, Relationship, StateMachine
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 _RELATIONSHIP_CARDINALITY: dict[str, str] = {
     "owns": "||--o{",
@@ -27,67 +30,65 @@ def _relationship_line(relationship: Relationship) -> str:
     cardinality = _RELATIONSHIP_CARDINALITY.get(relationship.kind, "}o--o{")
     source = _mermaid_id(relationship.source_name)
     target = _mermaid_id(relationship.target_name)
-    return f"    {source} {cardinality} {target} : {relationship.kind}"
+    return f"{source} {cardinality} {target} : {relationship.kind}"
 
 
 def _entity_field_lines(entity_slug: str, fields: tuple[Field, ...]) -> list[str]:
     """Return Mermaid ER attribute lines for ``entity_slug``."""
     lines: list[str] = []
-    for field in fields:
-        if field.entity_slug != entity_slug:
+    for domain_field in fields:
+        if domain_field.entity_slug != entity_slug:
             continue
-        type_name = python_type_for(field.type_name.value)
-        lines.append(f"        {type_name} {field.name}")
+        type_name = python_type_for(domain_field.type_name.value)
+        lines.append(f"{type_name} {domain_field.name}")
     return lines
 
 
-def _er_section(model: ProbabilisticDomainModel, options: ExportOptions) -> str:
-    view = export_view(model, options)
+def _er_context(view: ExportView) -> dict[str, object] | None:
     if not view.entities and not view.relationships:
-        return ""
-    lines = ["erDiagram"]
+        return None
+    entities: list[dict[str, object]] = []
     for entity in view.entities:
-        lines.append(f"    {_mermaid_id(entity.name)} {{")
         field_lines = _entity_field_lines(entity.slug, view.fields)
-        if field_lines:
-            lines.extend(field_lines)
-        else:
-            lines.append("        string name")
-        lines.append("    }")
-    for relationship in view.relationships:
-        lines.append(_relationship_line(relationship))
-    return "\n".join(lines)
+        entities.append(
+            {
+                "id": _mermaid_id(entity.name),
+                "field_lines": field_lines or ["string name"],
+            },
+        )
+    relationships = [
+        {"line": _relationship_line(relationship)} for relationship in view.relationships
+    ]
+    return {"entities": entities, "relationships": relationships}
 
 
-def _state_section(machine: StateMachine) -> str:
-    lines = ["stateDiagram-v2"]
+def _state_machine_context(machine: StateMachine) -> dict[str, object]:
+    transitions: list[dict[str, str]] = []
     for transition in machine.transitions:
         label = f"{transition.count}" if transition.count > 1 else ""
         if label:
-            lines.append(f"    {transition.from_state} --> {transition.to_state} : {label}")
+            line = f"{transition.from_state} --> {transition.to_state} : {label}"
         else:
-            lines.append(f"    {transition.from_state} --> {transition.to_state}")
-    return "\n".join(lines)
+            line = f"{transition.from_state} --> {transition.to_state}"
+        transitions.append({"line": line})
+    return {"transitions": transitions}
 
 
-def _build_mermaid(model: ProbabilisticDomainModel, options: ExportOptions) -> str:
-    sections: list[str] = []
-    er = _er_section(model, options)
-    if er:
-        sections.append(er)
-    view = export_view(model, options)
-    for machine in view.state_machines:
-        sections.append(_state_section(machine))
-    return "\n\n".join(sections) + ("\n" if sections else "")
+def _render_context(view: ExportView) -> Mapping[str, object]:
+    return {
+        "er_diagram": _er_context(view),
+        "state_machines": [_state_machine_context(machine) for machine in view.state_machines],
+    }
 
 
+@dataclass(frozen=True)
 class MermaidExporter:
     """Export a domain model as Mermaid diagram source."""
 
-    @property
-    def format_name(self) -> ExportFormat:
-        """Return the exporter format identifier."""
-        return ExportFormat.MERMAID
+    format_name: ExportFormat = ExportFormat.MERMAID
+    renderer: Renderer[Mapping[str, object]] = field(
+        default_factory=lambda: Jinja2Renderer("mermaid.mmd.j2"),
+    )
 
     def export(
         self,
@@ -96,4 +97,6 @@ class MermaidExporter:
         options: ExportOptions,
     ) -> str:
         """Return Mermaid diagram source for ``model``."""
-        return _build_mermaid(model, options)
+        view = export_view(model, options)
+        output = self.renderer.render(_render_context(view))
+        return output.rstrip() + "\n" if output.strip() else ""

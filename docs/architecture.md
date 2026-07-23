@@ -74,9 +74,14 @@ or `ExportOptions(include_ineligible=True)` or `ontolog infer --all` for the ful
 | Mermaid | `export/mermaid.py` | ER diagram + state-transition diagrams |
 | Markdown | `export/markdown_report.py` | Human-readable summary |
 | GraphML | `export/graphml.py` | XML graph for NetworkX-compatible tools |
-| Neo4j CSV | `export/graphml.py` | Bulk-import CSV (requires `[graph]` extra) |
+| Domain JSON | `export/domain_json.py` | Full domain model JSON |
+| Evidence graph | `export/evidence_graph_export.py` | Evidence graph JSON |
+| Full bundle | `export/full_bundle.py` | Domain model + graph + template summary |
 
 `export_domain_model(model, format, options=...)` is the library entry point for exporting an
+existing model. Graph-aware formats (`evidence-graph`, `full`) use `export_with_graph()` or
+`ontolog.infer()`, which retains the evidence graph via `InferenceContext` and returns it on
+`InferOutput.graph`. Exporters are frozen dataclasses composed with an injected `Renderer`.
 existing model. The public path is `ontolog.infer(source, format=...)`, which runs the full
 pipeline and returns an `InferOutput` with `.model` and `.artifact`.
 

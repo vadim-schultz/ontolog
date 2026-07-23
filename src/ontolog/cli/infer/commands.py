@@ -9,13 +9,10 @@ import typer
 
 from ontolog import infer
 from ontolog.cli.output import echo_status
-from ontolog.errors import ExportError, OntologError
+from ontolog.errors import OntologError
 from ontolog.export.formats import ExportFormat
-from ontolog.export.graphml import export_neo4j_csv
 from ontolog.export.options import ExportOptions
 from ontolog.ingestion.formats import LogFormat
-from ontolog.models.domain import ProbabilisticDomainModel
-from ontolog.pipeline import write_neo4j_csv_files
 from ontolog.templates import ExtractOptions
 
 
@@ -40,10 +37,6 @@ def infer_command(
         bool,
         typer.Option("--provenance", help="Include provenance in supported formats."),
     ] = False,
-    output_dir: Annotated[
-        Path | None,
-        typer.Option("--output-dir", help="Write multi-file exports to this directory."),
-    ] = None,
     preprocessor: Annotated[
         list[str] | None,
         typer.Option("--preprocessor", help="Additional preprocessors after strip."),
@@ -87,23 +80,4 @@ def infer_command(
         f"{len(output.model.events)} events, {len(output.model.fields)} fields"
     )
 
-    if export_format == ExportFormat.NEO4J_CSV and output_dir is not None:
-        _write_neo4j_files(output.model, export_options, output_dir)
-        return
-
     typer.echo(output.artifact, nl=False)
-
-
-def _write_neo4j_files(
-    model: ProbabilisticDomainModel,
-    options: ExportOptions,
-    output_dir: Path,
-) -> None:
-    try:
-        bundle = export_neo4j_csv(model, options=options)
-    except ExportError as exc:
-        typer.echo(str(exc), err=True)
-        raise typer.Exit(code=1) from exc
-
-    nodes_path, relationships_path = write_neo4j_csv_files(bundle, output_dir)
-    echo_status(f"wrote {nodes_path} and {relationships_path}")

@@ -4,6 +4,9 @@
 
 ### Changed
 
+* **BREAKING:** `InferOutput` gains a required `graph: EvidenceGraph` field
+* Exporters are now frozen dataclasses composed with an injected `renderer` (no change to
+  `export_domain_model()`/`export_with_graph()` call signatures)
 * **BREAKING:** Public CLI collapsed to `ontolog infer PATH --format EXPORT` only; removed
   `ingest`, `templates`, `export`, and `graph` commands
 * **BREAKING:** `ontolog.infer()` now requires `format` (export format) and returns `InferOutput`
@@ -13,8 +16,12 @@
 
 ### Added
 
-* Export layer (Chapter 8): `export_domain_model()`, five core exporters (Pydantic, JSON Schema,
-  Mermaid, Markdown, GraphML), optional Neo4j CSV behind `[graph]` extra
+* Export layer (Chapter 8): `export_domain_model()`, core exporters (Pydantic, JSON Schema,
+  Mermaid, Markdown, GraphML), plus `domain-json`, `evidence-graph`, and `full` formats
+* `GraphExporter` Protocol, `Renderer`/`JsonRenderer`/`GraphmlRenderer`/`Jinja2Renderer`
+* `EvidenceGraph.to_payload()`, `InferenceContext`, `build_inference_context_from_store()`,
+  `build_domain_model_with_graph_from_store()`
+* `jinja2` dependency; Markdown and Mermaid exporters use packaged Jinja2 templates
 * `Exporter` Protocol, `ExportFormat`, `ExportOptions`, and `export_view()` filtering
 * `ontolog export <format> --store PATH` CLI with `--all` and `--provenance` flags
 * `jsonschema` added to `[dev]` optional dependencies for schema validation tests

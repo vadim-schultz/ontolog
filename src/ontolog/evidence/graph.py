@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import networkx as nx
 
 from ontolog.errors import InferenceError
 from ontolog.models.evidence import Edge, Evidence, Node
+
+if TYPE_CHECKING:
+    from ontolog.types import JsonValue
 
 _GRAPH_JSON_VERSION = 1
 _NODE_DATA_KEY = "data"
@@ -105,14 +108,17 @@ class EvidenceGraph:
         updated = edge.model_copy(update={"evidence": (*edge.evidence, evidence)})
         self._graph.edges[source_id, target_id][_NODE_DATA_KEY] = updated.model_dump(mode="json")
 
-    def to_json(self, *, indent: int | None = 2) -> str:
-        """Serialize the graph to a versioned JSON document."""
-        payload = {
+    def to_payload(self) -> dict[str, JsonValue]:
+        """Return the graph as a JSON-serializable dict."""
+        return {
             "version": _GRAPH_JSON_VERSION,
             "nodes": [node.model_dump(mode="json") for node in self.nodes()],
             "edges": [edge.model_dump(mode="json") for edge in self.edges()],
         }
-        return json.dumps(payload, indent=indent)
+
+    def to_json(self, *, indent: int | None = 2) -> str:
+        """Serialize the graph to a versioned JSON document."""
+        return json.dumps(self.to_payload(), indent=indent)
 
     @classmethod
     def from_json(cls, data: str) -> EvidenceGraph:

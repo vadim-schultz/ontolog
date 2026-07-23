@@ -6,13 +6,19 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ontolog.config import OntologConfig, default_config
+from ontolog.evidence.graph import EvidenceGraph
 from ontolog.export.formats import ExportFormat
-from ontolog.export.graphml import Neo4jCsvBundle
 from ontolog.export.options import ExportOptions
-from ontolog.export.registry import export_domain_model, parse_export_format
-from ontolog.inference.builder import build_domain_model_from_store
+from ontolog.export.registry import (
+    export_domain_model,
+    export_with_graph,
+    graph_export_formats,
+    parse_export_format,
+)
+from ontolog.inference.builder import build_domain_model_with_graph_from_store
 from ontolog.ingestion.formats import LogFormat
 from ontolog.models.domain import ProbabilisticDomainModel
+from ontolog.models.finding import ProviderInput
 from ontolog.storage import SqliteTemplateStore
 from ontolog.templates.extractor import ExtractOptions, extract_templates
 
@@ -25,6 +31,7 @@ class InferOutput:
 
     model: ProbabilisticDomainModel
     artifact: str
+    graph: EvidenceGraph
 
 
 def _normalize_store_path(store_path: Path | str) -> Path | str:
@@ -63,20 +70,22 @@ def _extract(
     extract_templates(source, options, config=config, store=store)
 
 
-def _infer_model(
-    store: SqliteTemplateStore,
-    *,
-    config: OntologConfig,
-) -> ProbabilisticDomainModel:
-    return build_domain_model_from_store(store, config=config)
-
-
 def _export(
     model: ProbabilisticDomainModel,
     export_format: ExportFormat,
     *,
     options: ExportOptions,
+    graph: EvidenceGraph,
+    data: ProviderInput,
 ) -> str:
+    if export_format in graph_export_formats():
+        return export_with_graph(
+            model,
+            graph,
+            data,
+            export_format,
+            options=options,
+        )
     return export_domain_model(model, export_format, options=options)
 
 
@@ -97,20 +106,13 @@ def infer(
 
     with _ephemeral_store() as store:
         _extract(source, store, config=config, options=resolved_extract)
-        model = _infer_model(store, config=config)
-        artifact = _export(model, export_format, options=resolved_export)
+        model, context = build_domain_model_with_graph_from_store(store, config=config)
+        artifact = _export(
+            model,
+            export_format,
+            options=resolved_export,
+            graph=context.graph,
+            data=context.data,
+        )
 
-    return InferOutput(model=model, artifact=artifact)
-
-
-def write_neo4j_csv_files(
-    bundle: Neo4jCsvBundle,
-    output_dir: Path,
-) -> tuple[Path, Path]:
-    """Write Neo4j CSV payloads to ``output_dir``."""
-    output_dir.mkdir(parents=True, exist_ok=True)
-    nodes_path = output_dir / "nodes.csv"
-    relationships_path = output_dir / "relationships.csv"
-    nodes_path.write_text(bundle.nodes, encoding="utf-8")
-    relationships_path.write_text(bundle.relationships, encoding="utf-8")
-    return nodes_path, relationships_path
+    return InferOutput(model=model, artifact=artifact, graph=context.graph)

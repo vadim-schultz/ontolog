@@ -22,6 +22,7 @@ classifiers = [
 ]
 dependencies = [
     "drain3>=0.9.11",
+    "jinja2>=3.1",
     "networkx>=3.0",
     "pydantic>=2.0",
     "rich>=13.0",
@@ -33,7 +34,6 @@ dependencies = [
 ontolog = "ontolog.cli.main:app"
 
 [project.optional-dependencies]
-graph = []
 dev = [
     "pytest>=8.0",
     "pytest-cov>=7.1.0",
@@ -60,7 +60,7 @@ Changelog = "https://github.com/vadim-schultz/ontolog/blob/main/CHANGELOG.md"
 where = ["src"]
 
 [tool.setuptools.package-data]
-ontolog = ["py.typed"]
+ontolog = ["py.typed", "export/templates/*.j2"]
 
 [tool.ruff]
 line-length = 100

@@ -18,6 +18,7 @@ def test_infer_returns_infer_output_with_mermaid() -> None:
     assert isinstance(output, InferOutput)
     assert "erDiagram" in output.artifact
     assert len(output.model.entities) >= 2
+    assert output.graph.node_count() > 0
 
 
 def test_infer_requires_export_format() -> None:
@@ -44,6 +45,12 @@ def test_infer_export_all_includes_more_than_default() -> None:
     )
 
     assert len(all_output.artifact) >= len(default_output.artifact)
+
+
+def test_infer_evidence_graph_format() -> None:
+    output = infer(FIXTURES / "controlboard.log", format="evidence-graph")
+    assert output.artifact
+    assert output.graph.node_count() > 0
 
 
 def test_infer_uses_ephemeral_store(

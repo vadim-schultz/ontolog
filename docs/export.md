@@ -53,12 +53,12 @@ ontolog infer tests/fixtures/controlboard.log --format pydantic
 ontolog infer tests/fixtures/controlboard.log --format json-schema
 ontolog infer tests/fixtures/controlboard.log --format markdown
 ontolog infer tests/fixtures/controlboard.log --format graphml
+ontolog infer tests/fixtures/controlboard.log --format domain-json
+ontolog infer tests/fixtures/controlboard.log --format evidence-graph
+ontolog infer tests/fixtures/controlboard.log --format full
 
 # Include ineligible claims
 ontolog infer tests/fixtures/controlboard.log --format markdown --all
-
-# Neo4j bulk-import CSV (requires pip install ontolog[graph])
-ontolog infer tests/fixtures/controlboard.log --format neo4j-csv --output-dir ./neo4j-import
 ```
 
 ## Formats
@@ -89,10 +89,27 @@ relationships, state machines). Use `--provenance` on the CLI to include evidenc
 NetworkX-backed GraphML XML with nodes for entities, events, and fields, and edges for
 relationships.
 
-### Neo4j CSV (`neo4j-csv`)
+### Domain JSON (`domain-json`)
 
-Optional format behind the `[graph]` extra. Writes `nodes.csv` and `relationships.csv` suitable
-for Neo4j bulk import. No Neo4j driver is required.
+Serializes the full `ProbabilisticDomainModel` as JSON. This format always exports the
+complete model and ignores `include_ineligible` and `include_provenance`.
+
+### Evidence graph (`evidence-graph`)
+
+Serializes the populated `EvidenceGraph` as JSON. Requires graph context from
+`ontolog.infer()` or `export_with_graph()`. Ignores `ExportOptions` filtering flags.
+
+### Full bundle (`full`)
+
+Single JSON artifact with `domain_model`, `evidence_graph`, and a `templates` summary.
+Requires graph context from `ontolog.infer()` or `export_with_graph()`. Ignores
+`ExportOptions` filtering flags.
+
+## Jinja2 templates
+
+Markdown and Mermaid exporters render packaged templates under
+`src/ontolog/export/templates/`. Extend those `.j2` files to customize report layout or
+diagram structure without changing exporter call sites.
 
 ## Confidence filtering
 
