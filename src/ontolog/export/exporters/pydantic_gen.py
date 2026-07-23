@@ -5,18 +5,19 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 
-from ontolog.export.enum_codegen import enum_class_name, enum_class_source
-from ontolog.export.enum_slug import is_enum_type_slug
+from ontolog.enum_slug import is_enum_type_slug
 from ontolog.export.formats import ExportFormat
-from ontolog.export.identifiers import is_valid_field_name, to_python_identifier
 from ontolog.export.options import ExportOptions
-from ontolog.export.type_map import (
+from ontolog.export.rendering.formatting import confidence_suffix
+from ontolog.export.typemapping.enum_codegen import enum_class_name, enum_class_source
+from ontolog.export.typemapping.type_map import (
     pydantic_names_for,
     python_field_type,
     python_imports_for,
     type_description_for,
 )
 from ontolog.export.view import ExportView, export_view
+from ontolog.identifiers import is_valid_field_name, to_python_identifier
 from ontolog.models.domain import Entity, Field, ProbabilisticDomainModel, Relationship
 
 _MAX_FIELD_LINE_LENGTH = 100
@@ -41,7 +42,7 @@ def _class_name(entity: Entity) -> str:
 def field_description(field: Field) -> str:
     """Return a Pydantic field description including type and confidence."""
     base = type_description_for(field.type_name.value)
-    return f"{base} (confidence={field.type_name.confidence:.2f})"
+    return f"{base} {confidence_suffix(field.type_name.confidence)}"
 
 
 def _exportable_fields(fields: tuple[Field, ...]) -> tuple[Field, ...]:
@@ -143,7 +144,7 @@ def _relationship_field_line(child: Entity, relationship: Relationship) -> str:
     field_name = to_python_identifier(child.slug)
     if field_name is None:
         return ""
-    description = f"owns {child.name} (confidence={relationship.confidence:.2f})"
+    description = f"owns {child.name} {confidence_suffix(relationship.confidence)}"
     return f"    {field_name}: {_class_name(child)} = Field(description={description!r})"
 
 
@@ -164,7 +165,7 @@ def _entity_class(
     )
     lines = [
         f"class {_class_name(entity)}(BaseModel):",
-        f'    """Inferred entity (confidence={entity.confidence:.2f})."""',
+        f'    """Inferred entity {confidence_suffix(entity.confidence)}."""',
         "",
         "    model_config = ConfigDict(frozen=True)",
     ]
@@ -333,13 +334,11 @@ def _build_source(model: ProbabilisticDomainModel, options: ExportOptions) -> st
     return "\n".join(lines).rstrip() + "\n"
 
 
+@dataclass(frozen=True)
 class PydanticGenExporter:
     """Export a domain model as generated Pydantic source code."""
 
-    @property
-    def format_name(self) -> ExportFormat:
-        """Return the exporter format identifier."""
-        return ExportFormat.PYDANTIC
+    format_name: ExportFormat = ExportFormat.PYDANTIC
 
     def export(
         self,

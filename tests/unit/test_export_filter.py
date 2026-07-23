@@ -116,7 +116,10 @@ def test_exporter_registry_lists_formats() -> None:
     assert ExportFormat.MERMAID in formats
     assert ExportFormat.MARKDOWN in formats
     assert ExportFormat.GRAPHML in formats
-    assert len(formats) == 5
+    assert ExportFormat.DOMAIN_JSON in formats
+    assert ExportFormat.EVIDENCE_GRAPH in formats
+    assert ExportFormat.FULL in formats
+    assert len(formats) == 8
 
 
 def test_exporter_for_unknown_raises() -> None:

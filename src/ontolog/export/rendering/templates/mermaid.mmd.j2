@@ -1,0 +1,21 @@
+{% if er_diagram %}
+erDiagram
+{% for entity in er_diagram.entities %}
+    {{ entity.id }} {
+{% for field_line in entity.field_lines %}
+        {{ field_line }}
+{% endfor %}
+    }
+{% endfor %}
+{% for relationship in er_diagram.relationships %}
+    {{ relationship.line }}
+{% endfor %}
+{% endif %}
+{% for machine in state_machines %}
+{% if not loop.first or er_diagram %}
+
+{% endif %}stateDiagram-v2
+{% for transition in machine.transitions %}
+    {{ transition.line }}
+{% endfor %}
+{% endfor %}

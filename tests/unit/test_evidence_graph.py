@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import networkx as nx
 import pytest
 
@@ -159,3 +161,10 @@ def test_json_round_trip_preserves_evidence_order() -> None:
     node = restored.get_node("entity:a")
     assert node is not None
     assert node.evidence == (first, second)
+
+
+def test_to_payload_matches_to_json_body() -> None:
+    graph = EvidenceGraph()
+    graph.add_node(Node(id="entity:a", kind=NodeKind.ENTITY, label="A"))
+
+    assert json.loads(graph.to_json()) == graph.to_payload()

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ontolog.export.type_map import (
+from ontolog.export.typemapping.type_map import (
     json_schema_for,
     pydantic_names_for,
     python_field_type,

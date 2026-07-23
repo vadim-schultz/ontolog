@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ontolog.export.identifiers import is_valid_field_name, to_python_identifier
+from ontolog.identifiers import is_valid_field_name, to_python_identifier
 
 
 def test_is_valid_field_name_rejects_star() -> None:

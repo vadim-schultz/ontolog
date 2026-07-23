@@ -13,9 +13,9 @@ from __future__ import annotations
 import re
 
 from ontolog.config import ConfidenceThresholds
+from ontolog.enum_slug import enum_type_slug, is_enum_type_slug
 from ontolog.evidence.graph import EvidenceGraph
-from ontolog.export.enum_slug import enum_type_slug, is_enum_type_slug
-from ontolog.export.identifiers import is_valid_field_name
+from ontolog.identifiers import is_valid_field_name
 from ontolog.inference.queries import (
     collect_evidence,
     entity_slug_for_field,

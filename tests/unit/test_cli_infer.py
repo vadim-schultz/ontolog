@@ -2,18 +2,27 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from unittest.mock import patch
 
 from typer.testing import CliRunner
 
 from ontolog.cli.main import app
+from ontolog.evidence.graph import EvidenceGraph
 from ontolog.export import ExportOptions
 from ontolog.models.domain import ProbabilisticDomainModel
 from ontolog.pipeline import InferOutput
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 runner = CliRunner()
+_ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[a-zA-Z]")
+_CLI_ENV = {"NO_COLOR": "1", "TERM": "dumb"}
+
+
+def _plain_output(text: str) -> str:
+    """Strip ANSI escapes so assertions work when Rich splits styled option names."""
+    return _ANSI_ESCAPE.sub("", text)
 
 
 def test_cli_infer_requires_format() -> None:
@@ -32,10 +41,15 @@ def test_cli_infer_rejects_unknown_format() -> None:
 
 
 def test_cli_infer_help_lists_export_formats() -> None:
-    result = runner.invoke(app, ["infer", "--help"])
+    result = runner.invoke(
+        app,
+        ["infer", "--help"],
+        color=False,
+        env=_CLI_ENV,
+    )
 
     assert result.exit_code == 0
-    assert "pydantic|json-schema|" in result.stdout
+    assert "pydantic|json-schema|" in _plain_output(result.stdout)
 
 
 def test_cli_infer_prints_mermaid_to_stdout() -> None:
@@ -67,7 +81,7 @@ def test_cli_infer_log_format_option() -> None:
 
 def test_cli_infer_all_and_provenance_flags() -> None:
     model = ProbabilisticDomainModel()
-    output = InferOutput(model=model, artifact="report")
+    output = InferOutput(model=model, artifact="report", graph=EvidenceGraph())
 
     with patch("ontolog.cli.infer.commands.infer", return_value=output) as mock_infer:
         result = runner.invoke(

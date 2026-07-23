@@ -3,16 +3,20 @@
 from __future__ import annotations
 
 from ontolog.errors import ExportError
-from ontolog.export._extras import graph_extra_enabled
+from ontolog.evidence.graph import EvidenceGraph
+from ontolog.export.exporters.domain_json import DomainJsonExporter
+from ontolog.export.exporters.graphml import GraphMlExporter
+from ontolog.export.exporters.json_schema import JsonSchemaExporter
+from ontolog.export.exporters.markdown_report import MarkdownReportExporter
+from ontolog.export.exporters.mermaid import MermaidExporter
+from ontolog.export.exporters.pydantic_gen import PydanticGenExporter
 from ontolog.export.formats import ExportFormat
-from ontolog.export.graphml import GraphMlExporter, Neo4jCsvExporter
-from ontolog.export.json_schema import JsonSchemaExporter
-from ontolog.export.markdown_report import MarkdownReportExporter
-from ontolog.export.mermaid import MermaidExporter
+from ontolog.export.graph_exporters.evidence_graph_export import EvidenceGraphExporter
+from ontolog.export.graph_exporters.full_bundle import FullBundleExporter
 from ontolog.export.options import ExportOptions
-from ontolog.export.pydantic_gen import PydanticGenExporter
 from ontolog.models.domain import ProbabilisticDomainModel
-from ontolog.types import Exporter
+from ontolog.models.finding import ProviderInput
+from ontolog.types import Exporter, GraphExporter
 
 _CORE_EXPORTERS: tuple[Exporter, ...] = (
     PydanticGenExporter(),
@@ -20,21 +24,31 @@ _CORE_EXPORTERS: tuple[Exporter, ...] = (
     MermaidExporter(),
     MarkdownReportExporter(),
     GraphMlExporter(),
+    DomainJsonExporter(),
+)
+
+_GRAPH_EXPORTERS: tuple[GraphExporter, ...] = (
+    EvidenceGraphExporter(),
+    FullBundleExporter(),
 )
 
 
 def _build_exporter_map() -> dict[ExportFormat, Exporter]:
-    exporters: dict[ExportFormat, Exporter] = {
-        exporter.format_name: exporter for exporter in _CORE_EXPORTERS
-    }
-    if graph_extra_enabled():
-        exporters[ExportFormat.NEO4J_CSV] = Neo4jCsvExporter()
-    return exporters
+    return {exporter.format_name: exporter for exporter in _CORE_EXPORTERS}
+
+
+def _build_graph_exporter_map() -> dict[ExportFormat, GraphExporter]:
+    return {exporter.format_name: exporter for exporter in _GRAPH_EXPORTERS}
 
 
 def registered_formats() -> tuple[ExportFormat, ...]:
     """Return export formats available with the current install."""
-    return tuple(_build_exporter_map())
+    return tuple(_build_exporter_map()) + tuple(_build_graph_exporter_map())
+
+
+def graph_export_formats() -> frozenset[ExportFormat]:
+    """Return formats that require graph-aware export."""
+    return frozenset(_build_graph_exporter_map())
 
 
 def parse_export_format(name: str) -> ExportFormat:
@@ -48,8 +62,10 @@ def parse_export_format(name: str) -> ExportFormat:
 
 def exporter_for(format_name: ExportFormat) -> Exporter:
     """Return the exporter for ``format_name``."""
-    if format_name == ExportFormat.NEO4J_CSV and not graph_extra_enabled():
-        msg = "neo4j-csv export requires the optional [graph] extra: pip install ontolog[graph]"
+    if format_name in graph_export_formats():
+        msg = (
+            f"{format_name} requires graph-aware export; use export_with_graph() or ontolog.infer()"
+        )
         raise ExportError(msg)
     try:
         return _build_exporter_map()[format_name]
@@ -67,3 +83,20 @@ def export_domain_model(
     """Export ``model`` in the requested ``format_name``."""
     exporter = exporter_for(format_name)
     return exporter.export(model, options=options or ExportOptions())
+
+
+def export_with_graph(
+    model: ProbabilisticDomainModel,
+    graph: EvidenceGraph,
+    data: ProviderInput,
+    format_name: ExportFormat,
+    *,
+    options: ExportOptions | None = None,
+) -> str:
+    """Export ``model`` with graph context in the requested ``format_name``."""
+    try:
+        exporter = _build_graph_exporter_map()[format_name]
+    except KeyError as exc:
+        msg = f"unknown graph export format: {format_name}"
+        raise ExportError(msg) from exc
+    return exporter.export(model, graph=graph, data=data, options=options or ExportOptions())
