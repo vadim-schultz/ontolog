@@ -4,6 +4,9 @@
 
 ### Changed
 
+* Reorganized `export/` into concern-based sub-packages (`rendering/`, `typemapping/`,
+  `exporters/`, `graph_exporters/`); moved `enum_slug` and `identifiers` to package root (no
+  change to public `ontolog.export` API)
 * **BREAKING:** `InferOutput` gains a required `graph: EvidenceGraph` field
 * Exporters are now frozen dataclasses composed with an injected `renderer` (no change to
   `export_domain_model()`/`export_with_graph()` call signatures)

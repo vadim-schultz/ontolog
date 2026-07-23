@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 from ontolog.export.formats import ExportFormat
 from ontolog.export.options import ExportOptions
-from ontolog.export.renderer import JsonRenderer, Renderer
+from ontolog.export.rendering.renderer import JsonRenderer, Renderer
 from ontolog.models.domain import ProbabilisticDomainModel
 from ontolog.types import JsonValue
 

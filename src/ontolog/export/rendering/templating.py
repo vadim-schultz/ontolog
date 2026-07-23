@@ -8,7 +8,7 @@ from typing import TypeVar
 
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-from ontolog.export.formatting import confidence_suffix
+from ontolog.export.rendering.formatting import confidence_suffix
 
 T = TypeVar("T", bound=Mapping[str, object])
 
@@ -19,7 +19,7 @@ def _confidence_pct(value: float) -> str:
 
 def _build_environment() -> Environment:
     environment = Environment(
-        loader=PackageLoader("ontolog.export", "templates"),
+        loader=PackageLoader("ontolog.export.rendering", "templates"),
         trim_blocks=True,
         lstrip_blocks=True,
         autoescape=select_autoescape(enabled_extensions=()),

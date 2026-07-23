@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 
 from ontolog.export.formats import ExportFormat
 from ontolog.export.options import ExportOptions
-from ontolog.export.renderer import Renderer
-from ontolog.export.templating import Jinja2Renderer
+from ontolog.export.rendering.renderer import Renderer
+from ontolog.export.rendering.templating import Jinja2Renderer
 from ontolog.export.view import ExportView, export_view
 from ontolog.models.domain import (
     Entity,

@@ -6,10 +6,10 @@ from dataclasses import dataclass, field
 from typing import cast
 
 from ontolog.export.formats import ExportFormat
-from ontolog.export.formatting import confidence_suffix
 from ontolog.export.options import ExportOptions
-from ontolog.export.renderer import JsonRenderer, Renderer
-from ontolog.export.type_map import json_schema_for
+from ontolog.export.rendering.formatting import confidence_suffix
+from ontolog.export.rendering.renderer import JsonRenderer, Renderer
+from ontolog.export.typemapping.type_map import json_schema_for
 from ontolog.export.view import ExportView, export_view
 from ontolog.models.domain import Entity, Field, ProbabilisticDomainModel
 from ontolog.types import JsonValue

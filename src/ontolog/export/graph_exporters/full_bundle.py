@@ -8,7 +8,7 @@ from typing import cast
 from ontolog.evidence.graph import EvidenceGraph
 from ontolog.export.formats import ExportFormat
 from ontolog.export.options import ExportOptions
-from ontolog.export.renderer import JsonRenderer, Renderer
+from ontolog.export.rendering.renderer import JsonRenderer, Renderer
 from ontolog.models.domain import ProbabilisticDomainModel
 from ontolog.models.finding import ProviderInput
 from ontolog.models.template import Template

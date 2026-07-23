@@ -4,16 +4,16 @@ from __future__ import annotations
 
 from ontolog.errors import ExportError
 from ontolog.evidence.graph import EvidenceGraph
-from ontolog.export.domain_json import DomainJsonExporter
-from ontolog.export.evidence_graph_export import EvidenceGraphExporter
+from ontolog.export.exporters.domain_json import DomainJsonExporter
+from ontolog.export.exporters.graphml import GraphMlExporter
+from ontolog.export.exporters.json_schema import JsonSchemaExporter
+from ontolog.export.exporters.markdown_report import MarkdownReportExporter
+from ontolog.export.exporters.mermaid import MermaidExporter
+from ontolog.export.exporters.pydantic_gen import PydanticGenExporter
 from ontolog.export.formats import ExportFormat
-from ontolog.export.full_bundle import FullBundleExporter
-from ontolog.export.graphml import GraphMlExporter
-from ontolog.export.json_schema import JsonSchemaExporter
-from ontolog.export.markdown_report import MarkdownReportExporter
-from ontolog.export.mermaid import MermaidExporter
+from ontolog.export.graph_exporters.evidence_graph_export import EvidenceGraphExporter
+from ontolog.export.graph_exporters.full_bundle import FullBundleExporter
 from ontolog.export.options import ExportOptions
-from ontolog.export.pydantic_gen import PydanticGenExporter
 from ontolog.models.domain import ProbabilisticDomainModel
 from ontolog.models.finding import ProviderInput
 from ontolog.types import Exporter, GraphExporter

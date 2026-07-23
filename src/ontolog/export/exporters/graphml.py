@@ -8,7 +8,7 @@ import networkx as nx
 
 from ontolog.export.formats import ExportFormat
 from ontolog.export.options import ExportOptions
-from ontolog.export.renderer import GraphmlRenderer, Renderer
+from ontolog.export.rendering.renderer import GraphmlRenderer, Renderer
 from ontolog.export.view import ExportView, export_view
 from ontolog.models.domain import ProbabilisticDomainModel, Relationship
 

@@ -72,7 +72,7 @@ Generates importable Python source with one `BaseModel` per export-eligible enti
 ### JSON Schema (`json-schema`)
 
 Emits Draft 2020-12 JSON with entity definitions and typed field properties. Inferred type slugs
-(`ipv4`, `hex`, `uuid`, …) map to JSON Schema formats and patterns via `export/type_map.py`.
+(`ipv4`, `hex`, `uuid`, …) map to JSON Schema formats and patterns via `export/typemapping/type_map.py`.
 
 ### Mermaid (`mermaid`)
 
@@ -108,7 +108,7 @@ Requires graph context from `ontolog.infer()` or `export_with_graph()`. Ignores
 ## Jinja2 templates
 
 Markdown and Mermaid exporters render packaged templates under
-`src/ontolog/export/templates/`. Extend those `.j2` files to customize report layout or
+`src/ontolog/export/rendering/templates/`. Extend those `.j2` files to customize report layout or
 diagram structure without changing exporter call sites.
 
 ## Confidence filtering

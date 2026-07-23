@@ -6,7 +6,7 @@ import json
 
 import networkx as nx
 
-from ontolog.export.renderer import GraphmlRenderer, JsonRenderer
+from ontolog.export.rendering.renderer import GraphmlRenderer, JsonRenderer
 
 
 def test_json_renderer_round_trips() -> None:

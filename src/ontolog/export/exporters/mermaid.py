@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 
 from ontolog.export.formats import ExportFormat
 from ontolog.export.options import ExportOptions
-from ontolog.export.renderer import Renderer
-from ontolog.export.templating import Jinja2Renderer
-from ontolog.export.type_map import python_type_for
+from ontolog.export.rendering.renderer import Renderer
+from ontolog.export.rendering.templating import Jinja2Renderer
+from ontolog.export.typemapping.type_map import python_type_for
 from ontolog.export.view import ExportView, export_view
 from ontolog.models.domain import Field, ProbabilisticDomainModel, Relationship, StateMachine
 

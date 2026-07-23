@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ontolog.export.enum_slug import enum_values_from_slug
+from ontolog.enum_slug import enum_values_from_slug
 
 
 def enum_class_name(entity_name: str) -> str:
