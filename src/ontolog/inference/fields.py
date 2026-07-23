@@ -139,6 +139,20 @@ def _semantic_param_map(template_text: str) -> dict[str, str]:
     return {match.group(1): match.group(2) for match in _MASK_PARAM_PATTERN.finditer(template_text)}
 
 
+def _collect_node_evidence(
+    nodes: tuple[Node | None, ...],
+) -> tuple[list[float], list[Evidence]]:
+    """Collect scores and provenance from graph nodes."""
+    scores: list[float] = []
+    evidence: list[Evidence] = []
+    for node in nodes:
+        if node is None:
+            continue
+        scores.extend(item.score for item in node.evidence)
+        evidence.extend(collect_evidence(node))
+    return scores, evidence
+
+
 def _semantic_field_candidate(
     graph: EvidenceGraph,
     *,
@@ -156,17 +170,8 @@ def _semantic_field_candidate(
 
     typed_node = graph.get_node(typed_field_id)
     semantic_node = graph.get_node(field_id(template_id, semantic_name))
-    scores: list[float] = []
-    evidence: list[Evidence] = []
-    for node in (typed_node, semantic_node):
-        if node is None:
-            continue
-        scores.extend(item.score for item in node.evidence)
-        evidence.extend(collect_evidence(node))
-    for edge in graph.edges():
-        if edge.source_id == typed_field_id and edge.label == "has_type":
-            scores.extend(item.score for item in edge.evidence)
-            evidence.extend(edge.evidence)
+    scores, evidence = _collect_node_evidence((typed_node, semantic_node))
+    _append_has_type_evidence(graph, typed_field_id, scores, evidence)
 
     return FieldCandidate(
         name=semantic_name,

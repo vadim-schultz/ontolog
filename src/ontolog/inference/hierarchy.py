@@ -9,6 +9,7 @@ from itertools import pairwise
 
 from ontolog.inference.event_nouns import event_noun_from_slug
 from ontolog.models.finding import ProviderInput
+from ontolog.models.template import Template
 from ontolog.providers.ids import slugify
 
 _EVENT_PREFIX = re.compile(r"^([A-Za-z][A-Za-z0-9_]*)")
@@ -71,22 +72,39 @@ def build_hierarchy_index(data: ProviderInput) -> HierarchyIndex:
     for template in data.templates:
         process_slug = process_by_template.get(template.id)
         chain = ordered_entity_chain(template.template, process_slug=process_slug)
-        for parent_slug, child_slug in pairwise(chain):
-            owns_counter[(parent_slug, child_slug)] += 1
-        for param_name in _parameter_names(template.template):
-            owner = owner_slug_for_field(
-                template.template,
-                param_name,
-                process_slug=process_slug,
-            )
-            if owner is None:
-                continue
-            field_owners[(template.id, param_name)] = owner
+        _index_owns_chain(chain, owns_counter)
+        _index_field_owners(template, process_slug, field_owners)
     return HierarchyIndex(
         field_owners=field_owners,
         owns_edges=frozenset(owns_counter),
         owns_counts=dict(owns_counter),
     )
+
+
+def _index_owns_chain(
+    chain: tuple[str, ...],
+    owns_counter: Counter[tuple[str, str]],
+) -> None:
+    """Accumulate ``owns`` edge counts from an entity chain."""
+    for parent_slug, child_slug in pairwise(chain):
+        owns_counter[(parent_slug, child_slug)] += 1
+
+
+def _index_field_owners(
+    template: Template,
+    process_slug: str | None,
+    field_owners: dict[tuple[str, str], str],
+) -> None:
+    """Record field-to-entity ownership for one template."""
+    for param_name in _parameter_names(template.template):
+        owner = owner_slug_for_field(
+            template.template,
+            param_name,
+            process_slug=process_slug,
+        )
+        if owner is None:
+            continue
+        field_owners[(template.id, param_name)] = owner
 
 
 def _process_slug_by_template(data: ProviderInput) -> dict[str, str]:
@@ -107,6 +125,24 @@ def _last_entity_before_field(
     process_slug: str | None,
 ) -> str | None:
     """Walk template tokens and return the entity active at ``field_name``."""
+    last_entity = _initial_entity_state(template_text, process_slug=process_slug)
+    for param_name in _parameter_names(template_text):
+        last_entity, found = _advance_entity_state(
+            param_name,
+            field_name,
+            last_entity,
+        )
+        if found:
+            return last_entity
+    return last_entity
+
+
+def _initial_entity_state(
+    template_text: str,
+    *,
+    process_slug: str | None,
+) -> str | None:
+    """Return the entity slug active before the first parameter."""
     last_entity: str | None = None
     if process_slug is not None:
         last_entity = process_slug
@@ -115,13 +151,20 @@ def _last_entity_before_field(
         noun = event_noun_from_slug(event_slug)
         if noun is not None:
             last_entity = noun
-    for param_name in _parameter_names(template_text):
-        if param_name.lower() in STRUCTURAL_FIELD_LABELS:
-            last_entity = slugify(param_name)
-            continue
-        if param_name == field_name:
-            return last_entity
     return last_entity
+
+
+def _advance_entity_state(
+    param_name: str,
+    field_name: str,
+    last_entity: str | None,
+) -> tuple[str | None, bool]:
+    """Update entity state for one parameter; return whether ``field_name`` was found."""
+    if param_name.lower() in STRUCTURAL_FIELD_LABELS:
+        return slugify(param_name), False
+    if param_name == field_name:
+        return last_entity, True
+    return last_entity, False
 
 
 def _event_slug_from_template(template_text: str) -> str | None:

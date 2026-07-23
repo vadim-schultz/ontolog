@@ -67,22 +67,46 @@ def aggregate_ranked_groups(
     grouped = group_by_key(candidates, key_fn)
     results: list[R] = []
     for key in sorted(grouped):
-        ranked = rank_by_confidence(
-            grouped[key],
-            evidence_fn=lambda candidate: candidate.evidence,
-            value_fn=alternative_value_fn,
-            weights=weights,
-            tie_key_fn=tie_key_fn,
+        results.append(
+            _aggregate_group(
+                key,
+                grouped[key],
+                alternative_value_fn=alternative_value_fn,
+                tie_key_fn=tie_key_fn,
+                build=build,
+                weights=weights,
+                export_threshold=export_threshold,
+            ),
         )
-        primary, confidence = ranked[0]
-        alternatives = build_alternatives(
-            ranked,
-            value_fn=alternative_value_fn,
-            evidence_fn=lambda candidate: candidate.evidence,
-        )
-        eligible = export_eligible(confidence, export_threshold)
-        results.append(build(key, primary, confidence, alternatives, eligible))
     return tuple(results)
+
+
+def _aggregate_group(
+    key: K,
+    items: list[T],
+    *,
+    alternative_value_fn: Callable[[T], str],
+    tie_key_fn: Callable[[T], tuple[str, ...]],
+    build: Callable[[K, T, float, tuple[Alternative, ...], bool], R],
+    weights: EvidenceSourceWeights,
+    export_threshold: float,
+) -> R:
+    """Rank one candidate group and build its domain value."""
+    ranked = rank_by_confidence(
+        items,
+        evidence_fn=lambda candidate: candidate.evidence,
+        value_fn=alternative_value_fn,
+        weights=weights,
+        tie_key_fn=tie_key_fn,
+    )
+    primary, confidence = ranked[0]
+    alternatives = build_alternatives(
+        ranked,
+        value_fn=alternative_value_fn,
+        evidence_fn=lambda candidate: candidate.evidence,
+    )
+    eligible = export_eligible(confidence, export_threshold)
+    return build(key, primary, confidence, alternatives, eligible)
 
 
 def _best_tier(evidence: Sequence[Evidence]) -> EvidenceSourceTier:

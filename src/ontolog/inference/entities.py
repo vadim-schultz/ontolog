@@ -9,6 +9,7 @@ from ontolog.evidence.graph import EvidenceGraph
 from ontolog.inference.event_nouns import event_noun_from_slug
 from ontolog.inference.hierarchy import (
     STRUCTURAL_FIELD_LABELS,
+    HierarchyIndex,
     build_hierarchy_index,
     ordered_entity_chain,
 )
@@ -173,19 +174,34 @@ def _hierarchy_entities(
     """Promote entity slugs referenced by template-order hierarchy."""
     index = build_hierarchy_index(data)
     process_by_template = _process_slug_by_template(data)
-    slugs: set[str] = set()
-    for parent_slug, child_slug in index.owns_edges:
-        slugs.add(parent_slug)
-        slugs.add(child_slug)
-    for template in data.templates:
-        process_slug = process_by_template.get(template.id)
-        slugs.update(ordered_entity_chain(template.template, process_slug=process_slug))
+    slugs = _owns_edge_slugs(index) | _template_chain_slugs(data, process_by_template)
     candidates: list[EntityCandidate] = []
     for slug in sorted(slugs):
         candidate = _hierarchy_entity_candidate(graph, slug)
         if candidate is not None and candidate.confidence >= min_confidence:
             candidates.append(candidate)
     return tuple(candidates)
+
+
+def _owns_edge_slugs(index: HierarchyIndex) -> set[str]:
+    """Return entity slugs referenced by chained ``owns`` edges."""
+    slugs: set[str] = set()
+    for parent_slug, child_slug in index.owns_edges:
+        slugs.add(parent_slug)
+        slugs.add(child_slug)
+    return slugs
+
+
+def _template_chain_slugs(
+    data: ProviderInput,
+    process_by_template: dict[str, str],
+) -> set[str]:
+    """Return entity slugs from template occurrence chains."""
+    slugs: set[str] = set()
+    for template in data.templates:
+        process_slug = process_by_template.get(template.id)
+        slugs.update(ordered_entity_chain(template.template, process_slug=process_slug))
+    return slugs
 
 
 def _process_slug_by_template(data: ProviderInput) -> dict[str, str]:

@@ -105,37 +105,79 @@ def _state_machine_context(
     }
 
 
-def _render_context(view: ExportView, options: ExportOptions) -> Mapping[str, object]:
-    include_provenance = options.include_provenance
-    layout = entity_layout(view)
-    unscoped_fields = [
+def _entity_trees_context(
+    layout: EntityLayout,
+    *,
+    include_provenance: bool,
+) -> list[dict[str, object]]:
+    """Return nested entity tree contexts for root entities."""
+    return [
+        _entity_tree_context(
+            layout.slug_to_entity[root_slug],
+            layout,
+            include_provenance=include_provenance,
+        )
+        for root_slug in layout.root_slugs
+        if root_slug in layout.slug_to_entity
+    ]
+
+
+def _events_context(
+    view: ExportView,
+    *,
+    include_provenance: bool,
+) -> list[dict[str, object]]:
+    """Return event contexts for the report."""
+    return [_event_context(event, include_provenance=include_provenance) for event in view.events]
+
+
+def _unscoped_fields_context(
+    view: ExportView,
+    *,
+    include_provenance: bool,
+) -> list[dict[str, object]]:
+    """Return field contexts for fields without entity scope."""
+    return [
         _field_context(field, include_provenance=include_provenance)
         for field in view.fields
         if field.entity_slug is None
     ]
+
+
+def _relationships_context(
+    view: ExportView,
+    *,
+    include_provenance: bool,
+) -> list[dict[str, object]]:
+    """Return relationship contexts for the report."""
+    return [
+        _relationship_context(relationship, include_provenance=include_provenance)
+        for relationship in view.relationships
+    ]
+
+
+def _state_machines_context(
+    view: ExportView,
+    *,
+    include_provenance: bool,
+) -> list[dict[str, object]]:
+    """Return state machine contexts for the report."""
+    return [
+        _state_machine_context(machine, include_provenance=include_provenance)
+        for machine in view.state_machines
+    ]
+
+
+def _render_context(view: ExportView, options: ExportOptions) -> Mapping[str, object]:
+    include_provenance = options.include_provenance
+    layout = entity_layout(view)
     return {
         "include_provenance": include_provenance,
-        "entity_trees": [
-            _entity_tree_context(
-                layout.slug_to_entity[root_slug],
-                layout,
-                include_provenance=include_provenance,
-            )
-            for root_slug in layout.root_slugs
-            if root_slug in layout.slug_to_entity
-        ],
-        "events": [
-            _event_context(event, include_provenance=include_provenance) for event in view.events
-        ],
-        "unscoped_fields": unscoped_fields,
-        "relationships": [
-            _relationship_context(relationship, include_provenance=include_provenance)
-            for relationship in view.relationships
-        ],
-        "state_machines": [
-            _state_machine_context(machine, include_provenance=include_provenance)
-            for machine in view.state_machines
-        ],
+        "entity_trees": _entity_trees_context(layout, include_provenance=include_provenance),
+        "events": _events_context(view, include_provenance=include_provenance),
+        "unscoped_fields": _unscoped_fields_context(view, include_provenance=include_provenance),
+        "relationships": _relationships_context(view, include_provenance=include_provenance),
+        "state_machines": _state_machines_context(view, include_provenance=include_provenance),
     }
 
 

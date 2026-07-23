@@ -132,13 +132,23 @@ def _relationship_field_line(child: Entity, relationship: Relationship) -> str:
     return f"    {field_name}: {_class_name(child)} = Field(description={description!r})"
 
 
-def _entity_class(
-    entity: Entity,
+def _class_header_lines(entity: Entity) -> list[str]:
+    """Return class declaration and model config lines."""
+    return [
+        f"class {_class_name(entity)}(BaseModel):",
+        f'    """Inferred entity {confidence_suffix(entity.confidence)}."""',
+        "",
+        "    model_config = ConfigDict(frozen=True)",
+    ]
+
+
+def _class_body_lines(
     fields: tuple[Field, ...],
     composition: tuple[tuple[Entity, Relationship], ...],
     *,
     enum_names: dict[str, str],
-) -> str:
+) -> list[str]:
+    """Return field and composition assignment lines for an entity class."""
     body_lines = [
         line for line in (_field_line(field, enum_names=enum_names) for field in fields) if line
     ]
@@ -147,12 +157,18 @@ def _entity_class(
         for line in (_relationship_field_line(child, rel) for child, rel in composition)
         if line
     )
-    lines = [
-        f"class {_class_name(entity)}(BaseModel):",
-        f'    """Inferred entity {confidence_suffix(entity.confidence)}."""',
-        "",
-        "    model_config = ConfigDict(frozen=True)",
-    ]
+    return body_lines
+
+
+def _entity_class(
+    entity: Entity,
+    fields: tuple[Field, ...],
+    composition: tuple[tuple[Entity, Relationship], ...],
+    *,
+    enum_names: dict[str, str],
+) -> str:
+    body_lines = _class_body_lines(fields, composition, enum_names=enum_names)
+    lines = _class_header_lines(entity)
     if body_lines:
         lines.append("")
         lines.extend(body_lines)

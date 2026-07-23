@@ -43,29 +43,46 @@ def _ownership_candidates(
     candidates: list[RelationshipCandidate] = []
     for parent_slug, child_slug in sorted(index.owns_edges):
         support = index.owns_counts[(parent_slug, child_slug)]
-        confidence = _chain_owns_confidence(
+        candidate = _owns_candidate(
             graph,
             parent_slug,
             child_slug,
-            template_support=support,
+            support,
+            min_confidence,
         )
-        if confidence < min_confidence:
-            continue
-        candidates.append(
-            RelationshipCandidate(
-                kind="owns",
-                source_name=_display_name(graph, parent_slug),
-                target_name=_display_name(graph, child_slug),
-                confidence=confidence,
-                evidence=_chain_owns_evidence(
-                    graph,
-                    parent_slug,
-                    child_slug,
-                    template_support=support,
-                ),
-            ),
-        )
+        if candidate is not None:
+            candidates.append(candidate)
     return tuple(candidates)
+
+
+def _owns_candidate(
+    graph: EvidenceGraph,
+    parent_slug: str,
+    child_slug: str,
+    template_support: int,
+    min_confidence: float,
+) -> RelationshipCandidate | None:
+    """Return an ``owns`` candidate when confidence meets the threshold."""
+    confidence = _chain_owns_confidence(
+        graph,
+        parent_slug,
+        child_slug,
+        template_support=template_support,
+    )
+    if confidence < min_confidence:
+        return None
+    return RelationshipCandidate(
+        kind="owns",
+        source_name=_display_name(graph, parent_slug),
+        target_name=_display_name(graph, child_slug),
+        confidence=confidence,
+        evidence=_chain_owns_evidence(
+            graph,
+            parent_slug,
+            child_slug,
+            template_support=template_support,
+        ),
+    )
 
 
 def _chain_owns_confidence(

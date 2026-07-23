@@ -31,6 +31,19 @@ def _truncate(value: str, *, max_length: int = 80) -> str:
     return value[: max_length - 1] + "…"
 
 
+def _add_template_row(table: Table, template: Template) -> None:
+    """Append one template summary row to ``table``."""
+    example = template.examples[0] if template.examples else ""
+    table.add_row(
+        template.id,
+        str(template.occurrence_count),
+        _truncate(template.template),
+        _format_timestamp(template.first_seen),
+        _format_timestamp(template.last_seen),
+        _truncate(example),
+    )
+
+
 def render_template_table(
     templates: Sequence[Template],
     *,
@@ -46,14 +59,6 @@ def render_template_table(
     table.add_column("Example")
 
     for template in templates:
-        example = template.examples[0] if template.examples else ""
-        table.add_row(
-            template.id,
-            str(template.occurrence_count),
-            _truncate(template.template),
-            _format_timestamp(template.first_seen),
-            _format_timestamp(template.last_seen),
-            _truncate(example),
-        )
+        _add_template_row(table, template)
 
     (console or stdout_console).print(table)
