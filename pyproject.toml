@@ -39,7 +39,7 @@ dev = [
     "pytest-cov>=7.1.0",
     "ruff>=0.3",
     "mypy>=2.3.0",
-    "hypothesis>=6.156.6",
+    "hypothesis>=6.160.0",
     "jsonschema>=4.0",
 ]
 docs = [
