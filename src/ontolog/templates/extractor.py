@@ -105,17 +105,20 @@ class _TemplateMergeContext:
     max_examples: int
 
 
-def _build_template(context: _TemplateMergeContext) -> Template:
-    if context.existing is None:
-        return Template(
-            id=context.cluster_id,
-            template=context.template_text,
-            occurrence_count=1,
-            first_seen=context.record.timestamp,
-            last_seen=context.record.timestamp,
-            examples=(context.message,),
-        )
-    existing = context.existing
+def _new_template(context: _TemplateMergeContext) -> Template:
+    """Build a template for the first occurrence in a cluster."""
+    return Template(
+        id=context.cluster_id,
+        template=context.template_text,
+        occurrence_count=1,
+        first_seen=context.record.timestamp,
+        last_seen=context.record.timestamp,
+        examples=(context.message,),
+    )
+
+
+def _merged_template(context: _TemplateMergeContext, existing: Template) -> Template:
+    """Merge a mined message into an existing template."""
     return Template(
         id=context.cluster_id,
         template=context.template_text,
@@ -128,6 +131,12 @@ def _build_template(context: _TemplateMergeContext) -> Template:
             max_examples=context.max_examples,
         ),
     )
+
+
+def _build_template(context: _TemplateMergeContext) -> Template:
+    if context.existing is None:
+        return _new_template(context)
+    return _merged_template(context, context.existing)
 
 
 def _store_delta_template(
@@ -168,26 +177,29 @@ class TemplateExtractor:
             return None
 
         try:
-            mined = self._mine_message(message)
-            cluster_id, existing = self._lookup_existing(mined.cluster_id, mined.template_text)
-            parameters = self._extract_parameters(mined.template_text, message)
-            template = _build_template(
-                _TemplateMergeContext(
-                    cluster_id=cluster_id,
-                    template_text=mined.template_text,
-                    record=record,
-                    message=message,
-                    existing=existing,
-                    max_examples=self.max_examples,
-                )
-            )
-            self._templates[cluster_id] = template
-            self._persist(cluster_id, mined.template_text, record, message, parameters)
+            return self._ingest_unsafe(record, message)
         except Exception as exc:
             message_text = f"template extraction failed: {exc}"
             raise TemplateError(message_text) from exc
-        else:
-            return template
+
+    def _ingest_unsafe(self, record: LogRecord, message: str) -> Template:
+        """Mine and persist a template without error translation."""
+        mined = self._mine_message(message)
+        cluster_id, existing = self._lookup_existing(mined.cluster_id, mined.template_text)
+        parameters = self._extract_parameters(mined.template_text, message)
+        template = _build_template(
+            _TemplateMergeContext(
+                cluster_id=cluster_id,
+                template_text=mined.template_text,
+                record=record,
+                message=message,
+                existing=existing,
+                max_examples=self.max_examples,
+            )
+        )
+        self._templates[cluster_id] = template
+        self._persist(cluster_id, mined.template_text, record, message, parameters)
+        return template
 
     def _mine_message(self, message: str) -> _MinedMessage:
         result: dict[str, Any] = self._miner.add_log_message(message)

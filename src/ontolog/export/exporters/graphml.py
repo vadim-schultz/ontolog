@@ -10,7 +10,7 @@ from ontolog.export.formats import ExportFormat
 from ontolog.export.options import ExportOptions
 from ontolog.export.rendering.renderer import GraphmlRenderer, Renderer
 from ontolog.export.view import ExportView, export_view
-from ontolog.models.domain import ProbabilisticDomainModel, Relationship
+from ontolog.models.domain import Field, ProbabilisticDomainModel, Relationship
 
 
 def _node_id(kind: str, name: str) -> str:
@@ -19,12 +19,35 @@ def _node_id(kind: str, name: str) -> str:
 
 def _build_export_graph(view: ExportView) -> nx.DiGraph:
     graph = nx.DiGraph()
+    slug_to_name = {entity.slug: entity.name for entity in view.entities}
+    _add_entity_nodes(graph, view)
+    _add_event_nodes(graph, view)
+    _add_field_nodes(graph, view, slug_to_name)
+    for relationship in view.relationships:
+        _add_relationship_edge(graph, relationship)
+    return graph
+
+
+def _add_entity_nodes(graph: nx.DiGraph, view: ExportView) -> None:
+    """Add entity nodes to ``graph``."""
     for entity in view.entities:
         node = _node_id("entity", entity.name)
         graph.add_node(node, kind="entity", label=entity.name, confidence=entity.confidence)
+
+
+def _add_event_nodes(graph: nx.DiGraph, view: ExportView) -> None:
+    """Add event nodes to ``graph``."""
     for event in view.events:
         node = _node_id("event", event.name)
         graph.add_node(node, kind="event", label=event.name, confidence=event.confidence)
+
+
+def _add_field_nodes(
+    graph: nx.DiGraph,
+    view: ExportView,
+    slug_to_name: dict[str, str],
+) -> None:
+    """Add field nodes and ``has_field`` edges to ``graph``."""
     for domain_field in view.fields:
         node = _node_id("field", domain_field.name)
         graph.add_node(
@@ -34,9 +57,25 @@ def _build_export_graph(view: ExportView) -> nx.DiGraph:
             type_name=domain_field.type_name.value,
             confidence=domain_field.type_name.confidence,
         )
-    for relationship in view.relationships:
-        _add_relationship_edge(graph, relationship)
-    return graph
+        _add_has_field_edge(graph, domain_field, slug_to_name)
+
+
+def _add_has_field_edge(
+    graph: nx.DiGraph,
+    domain_field: Field,
+    slug_to_name: dict[str, str],
+) -> None:
+    """Link a field node to its owning entity when known."""
+    if domain_field.entity_slug is None:
+        return
+    entity_name = slug_to_name.get(domain_field.entity_slug)
+    if entity_name is None:
+        return
+    source = _node_id("entity", entity_name)
+    target = _node_id("field", domain_field.name)
+    if source not in graph:
+        return
+    graph.add_edge(source, target, kind="has_field")
 
 
 def _add_relationship_edge(graph: nx.DiGraph, relationship: Relationship) -> None:

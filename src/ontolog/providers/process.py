@@ -40,19 +40,27 @@ class ProcessProvider:
         for subsequence, count in counts.items():
             if count < self._min_support:
                 continue
-            score = min(1.0, 0.6 + 0.05 * count)
-            evidence = Evidence(
-                source="process",
-                score=score,
-                explanation=f"Subsequence repeated {count} times: {' -> '.join(subsequence)}",
-            )
-            left_id = template_node_id(subsequence[0])
-            right_id = template_node_id(subsequence[-1])
-            edge = Edge(
-                source_id=left_id,
-                target_id=right_id,
-                label="repeats_in_process",
-                evidence=(evidence,),
-            )
-            findings.append(EvidenceFinding(evidence=evidence, edge=edge))
+            findings.append(_finding_for_subsequence(subsequence, count))
         return tuple(findings)
+
+
+def _finding_for_subsequence(
+    subsequence: tuple[str, ...],
+    count: int,
+) -> EvidenceFinding:
+    """Return a finding for one repeated template subsequence."""
+    score = min(1.0, 0.6 + 0.05 * count)
+    evidence = Evidence(
+        source="process",
+        score=score,
+        explanation=f"Subsequence repeated {count} times: {' -> '.join(subsequence)}",
+    )
+    left_id = template_node_id(subsequence[0])
+    right_id = template_node_id(subsequence[-1])
+    edge = Edge(
+        source_id=left_id,
+        target_id=right_id,
+        label="repeats_in_process",
+        evidence=(evidence,),
+    )
+    return EvidenceFinding(evidence=evidence, edge=edge)

@@ -20,14 +20,19 @@ def test_schema_has_entity_definitions(tmp_path: Path) -> None:
     schema = json.loads(export_domain_model(model, ExportFormat.JSON_SCHEMA))
     properties = schema["properties"]
     assert "Controlboard" in properties
-    assert "Interface" in properties
+    controlboard = properties["Controlboard"]
+    assert controlboard["type"] == "object"
+    assert "packet" in controlboard["properties"]
 
 
-def test_schema_field_types(tmp_path: Path) -> None:
+def test_schema_field_types_nested_under_interface(tmp_path: Path) -> None:
     model = aggregate_fixture("controlboard.log", tmp_path, config=EXPORT_CONFIG)
     schema = json.loads(export_domain_model(model, ExportFormat.JSON_SCHEMA))
-    destination = schema["properties"]["destination"]
-    payload = schema["properties"]["payload"]
+    interface = schema["properties"]["Controlboard"]["properties"]["packet"]["properties"][
+        "interface"
+    ]
+    destination = interface["properties"]["destination"]
+    payload = interface["properties"]["payload"]
     assert destination["format"] == "ipv4"
     assert "pattern" in payload
 
@@ -37,17 +42,21 @@ def test_schema_omits_ineligible(tmp_path: Path) -> None:
     model = aggregate_fixture("controlboard.log", tmp_path, config=strict)
     schema = json.loads(export_domain_model(model, ExportFormat.JSON_SCHEMA))
     properties = schema.get("properties", {})
-    assert "destination" in properties
-    assert "Controlboard" in properties
+    assert "Interface" in properties
+    assert "destination" not in properties
 
 
 def test_sample_instance_validates(tmp_path: Path) -> None:
     model = aggregate_fixture("controlboard.log", tmp_path, config=EXPORT_CONFIG)
     schema = json.loads(export_domain_model(model, ExportFormat.JSON_SCHEMA))
     sample = {
-        "Controlboard": {},
-        "Interface": {},
-        "destination": "10.0.0.1",
-        "payload": "deadbeef",
+        "Controlboard": {
+            "packet": {
+                "interface": {
+                    "destination": "10.0.0.1",
+                    "payload": "deadbeef",
+                },
+            },
+        },
     }
     jsonschema.validate(sample, schema)

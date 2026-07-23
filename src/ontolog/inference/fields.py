@@ -52,7 +52,7 @@ class FieldInferencePass:
     ) -> InferenceResult:
         """Return field candidates."""
         mask_tokens = _mask_tokens_from_templates(data.templates)
-        candidates = _semantic_field_candidates(graph, data.templates, thresholds.field)
+        candidates = _semantic_field_candidates(graph, data.templates, thresholds.field, data=data)
         _graph_field_candidates(candidates, graph, data, mask_tokens, thresholds.field)
         return InferenceResult(fields=tuple(candidates.values()))
 
@@ -74,11 +74,13 @@ def _semantic_field_candidates(
     graph: EvidenceGraph,
     templates: tuple[Template, ...],
     min_confidence: float,
+    *,
+    data: ProviderInput,
 ) -> dict[str, FieldCandidate]:
     """Build field candidates from semantic template parameter names."""
     candidates: dict[str, FieldCandidate] = {}
     for template in templates:
-        _add_semantic_fields_for_template(candidates, graph, template, min_confidence)
+        _add_semantic_fields_for_template(candidates, graph, template, min_confidence, data=data)
     return candidates
 
 
@@ -87,6 +89,8 @@ def _add_semantic_fields_for_template(
     graph: EvidenceGraph,
     template: Template,
     min_confidence: float,
+    *,
+    data: ProviderInput,
 ) -> None:
     """Merge semantic fields inferred from one template's mask placeholders."""
     for semantic_name, mask_token in _semantic_param_map(template.template).items():
@@ -97,6 +101,7 @@ def _add_semantic_fields_for_template(
                 template_id=template.id,
                 semantic_name=semantic_name,
                 mask_token=mask_token,
+                data=data,
             ),
             min_confidence,
         )
@@ -134,12 +139,27 @@ def _semantic_param_map(template_text: str) -> dict[str, str]:
     return {match.group(1): match.group(2) for match in _MASK_PARAM_PATTERN.finditer(template_text)}
 
 
+def _collect_node_evidence(
+    nodes: tuple[Node | None, ...],
+) -> tuple[list[float], list[Evidence]]:
+    """Collect scores and provenance from graph nodes."""
+    scores: list[float] = []
+    evidence: list[Evidence] = []
+    for node in nodes:
+        if node is None:
+            continue
+        scores.extend(item.score for item in node.evidence)
+        evidence.extend(collect_evidence(node))
+    return scores, evidence
+
+
 def _semantic_field_candidate(
     graph: EvidenceGraph,
     *,
     template_id: str,
     semantic_name: str,
     mask_token: str,
+    data: ProviderInput,
 ) -> FieldCandidate | None:
     if not is_valid_field_name(semantic_name):
         return None
@@ -150,24 +170,19 @@ def _semantic_field_candidate(
 
     typed_node = graph.get_node(typed_field_id)
     semantic_node = graph.get_node(field_id(template_id, semantic_name))
-    scores: list[float] = []
-    evidence: list[Evidence] = []
-    for node in (typed_node, semantic_node):
-        if node is None:
-            continue
-        scores.extend(item.score for item in node.evidence)
-        evidence.extend(collect_evidence(node))
-    for edge in graph.edges():
-        if edge.source_id == typed_field_id and edge.label == "has_type":
-            scores.extend(item.score for item in edge.evidence)
-            evidence.extend(edge.evidence)
+    scores, evidence = _collect_node_evidence((typed_node, semantic_node))
+    _append_has_type_evidence(graph, typed_field_id, scores, evidence)
 
     return FieldCandidate(
         name=semantic_name,
         type_name=type_name,
         confidence=combine_scores(scores),
         graph_node_id=field_id(template_id, semantic_name),
-        entity_slug=entity_slug_for_field(graph, field_id(template_id, semantic_name)),
+        entity_slug=entity_slug_for_field(
+            graph,
+            field_id(template_id, semantic_name),
+            data=data,
+        ),
         evidence=tuple(evidence),
     )
 
@@ -184,7 +199,7 @@ def _field_candidate(
     if type_name is None:
         return None
     scores, evidence = _field_scores_and_evidence(graph, node, type_name)
-    return _build_field_candidate(graph, node, type_name, scores, evidence)
+    return _build_field_candidate(graph, node, type_name, scores, evidence, data=data)
 
 
 def _resolved_type_name(
@@ -250,6 +265,8 @@ def _build_field_candidate(
     type_name: str,
     scores: list[float],
     evidence: list[Evidence],
+    *,
+    data: ProviderInput,
 ) -> FieldCandidate:
     """Build a field candidate from resolved type and collected evidence."""
     return FieldCandidate(
@@ -257,7 +274,7 @@ def _build_field_candidate(
         type_name=type_name,
         confidence=combine_scores(scores),
         graph_node_id=node.id,
-        entity_slug=entity_slug_for_field(graph, node.id),
+        entity_slug=entity_slug_for_field(graph, node.id, data=data),
         evidence=tuple(evidence),
     )
 

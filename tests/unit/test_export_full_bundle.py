@@ -26,3 +26,26 @@ def test_full_bundle_contains_domain_graph_and_templates(tmp_path: Path) -> None
     assert payload["domain_model"]["entities"]
     assert payload["evidence_graph"]["nodes"]
     assert payload["templates"]
+
+
+def test_full_bundle_domain_model_reflects_hierarchy(tmp_path: Path) -> None:
+    store_path = tmp_path / "ontolog.db"
+    extract_fixture_to_store("controlboard.log", store_path)
+    with SqliteTemplateStore(store_path) as store:
+        model, context = build_domain_model_with_graph_from_store(store, config=default_config())
+    artifact = export_with_graph(
+        model,
+        context.graph,
+        context.data,
+        ExportFormat.FULL,
+    )
+    domain = json.loads(artifact)["domain_model"]
+    owns = {
+        (relationship["source_name"], relationship["target_name"])
+        for relationship in domain["relationships"]
+        if relationship["kind"] == "owns"
+    }
+    assert ("Controlboard", "Packet") in owns
+    assert ("Packet", "Interface") in owns
+    destination = next(field for field in domain["fields"] if field["name"] == "destination")
+    assert destination["entity_slug"] == "interface"

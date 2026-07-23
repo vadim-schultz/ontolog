@@ -20,7 +20,9 @@ def test_er_diagram_controlboard(tmp_path: Path) -> None:
     assert "Controlboard" in output
     assert "Interface" in output
     assert "owns" in output
-    assert "IPv4Address destination" in output or "str destination" in output
+    interface_block = re.search(r"Interface \{[^}]+\}", output, re.S)
+    assert interface_block is not None
+    assert "destination" in interface_block.group(0)
 
 
 def test_er_omits_ineligible_relationship(tmp_path: Path) -> None:

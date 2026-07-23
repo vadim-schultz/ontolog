@@ -304,7 +304,7 @@ candidates only when combined evidence clears a configurable confidence threshol
       "type_name": "ipv4",
       "confidence": 1.0,
       "graph_node_id": "field:cluster_1:destination",
-      "entity_slug": "controlboard",
+      "entity_slug": "interface",
       "evidence": [
         {
           "source": "regex",
@@ -362,7 +362,7 @@ weighted confidence within the winning tier.
           }
         ]
       },
-      "entity_slug": "controlboard",
+      "entity_slug": "interface",
       "graph_node_id": "field:cluster_1:destination"
     }
   ],
@@ -400,19 +400,20 @@ renders step 7 export artifacts from the aggregated domain model.
 ```mermaid
 erDiagram
     Controlboard {
+        string name
+    }
+    Interface {
         IPv4Address destination
         str payload
         IPv4Address source
         IPv4Address peer
     }
-    Interface {
-        string name
-    }
     Packet {
         string name
     }
-    Controlboard ||--o{ Interface : owns
+    Controlboard ||--o{ Connection : owns
     Controlboard ||--o{ Packet : owns
+    Packet ||--o{ Interface : owns
 ```
 
 ### Generated Pydantic model
@@ -429,16 +430,22 @@ class Interface(BaseModel):
     source: IPv4Address = Field(description='IPv4 address (confidence=1.00)')
     peer: IPv4Address = Field(description='IPv4 address (confidence=1.00)')
 
+class Packet(BaseModel):
+    """Inferred entity (confidence=0.87)."""
+
+    interface: Interface = Field(description='owns Interface (confidence=0.76)')
+
 class Controlboard(BaseModel):
     """Inferred entity (confidence=0.68)."""
 
-    interface: Interface = Field(description='owns Interface (confidence=0.87)')
-    packet: Packet = Field(description='owns Packet (confidence=0.96)')
+    packet: Packet = Field(description='owns Packet (confidence=0.92)')
 ```
 
 Generated code passes `ruff` and `mypy --strict`.
 
 ### JSON Schema fragment
+
+Nested under `Controlboard.packet.interface`:
 
 ```json
 "destination": {

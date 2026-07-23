@@ -44,7 +44,17 @@ def test_controlboard_composition(tmp_path: Path) -> None:
         re.S,
     )
     assert controlboard_block is not None
-    assert "interface: Interface = Field(" in controlboard_block.group(0)
+    assert "packet: Packet = Field(" in controlboard_block.group(0)
+    packet_block = re.search(r"class Packet\(BaseModel\):.*?(?=\nclass |\Z)", source, re.S)
+    assert packet_block is not None
+    assert "interface: Interface = Field(" in packet_block.group(0)
+
+
+def test_controlboard_no_field_duplication_across_children(tmp_path: Path) -> None:
+    model = aggregate_fixture("controlboard.log", tmp_path, config=EXPORT_CONFIG)
+    source = export_domain_model(model, ExportFormat.PYDANTIC)
+    assert source.count("destination: IPv4Address") == 1
+    assert source.count("payload: str") == 1
 
 
 def test_field_description_includes_confidence(tmp_path: Path) -> None:

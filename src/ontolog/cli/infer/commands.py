@@ -13,7 +13,44 @@ from ontolog.errors import OntologError
 from ontolog.export.formats import ExportFormat
 from ontolog.export.options import ExportOptions
 from ontolog.ingestion.formats import LogFormat
+from ontolog.pipeline import InferOutput
 from ontolog.templates import ExtractOptions
+
+
+def _build_export_options(
+    *,
+    include_all: bool,
+    provenance: bool,
+) -> ExportOptions:
+    """Return export options from CLI flags."""
+    return ExportOptions(
+        include_ineligible=include_all,
+        include_provenance=provenance,
+    )
+
+
+def _build_extract_options(
+    *,
+    log_format: LogFormat,
+    preprocessor: list[str] | None,
+    skip_errors: bool,
+    limit: int | None,
+) -> ExtractOptions:
+    """Return extraction options from CLI flags."""
+    return ExtractOptions(
+        format=log_format,
+        preprocessors=tuple(preprocessor or ()),
+        skip_errors=skip_errors,
+        limit=limit,
+    )
+
+
+def _echo_summary(output: InferOutput) -> None:
+    """Print inference summary to stderr."""
+    echo_status(
+        f"Inferred: {len(output.model.entities)} entities, "
+        f"{len(output.model.events)} events, {len(output.model.fields)} fields"
+    )
 
 
 def infer_command(
@@ -52,14 +89,10 @@ def infer_command(
 ) -> None:
     """Infer a domain model from logs and export it."""
     source: Path | str = "-" if str(path) == "-" else path
-
-    export_options = ExportOptions(
-        include_ineligible=include_all,
-        include_provenance=provenance,
-    )
-    extract_options = ExtractOptions(
-        format=log_format,
-        preprocessors=tuple(preprocessor or ()),
+    export_options = _build_export_options(include_all=include_all, provenance=provenance)
+    extract_options = _build_extract_options(
+        log_format=log_format,
+        preprocessor=preprocessor,
         skip_errors=skip_errors,
         limit=limit,
     )
@@ -75,9 +108,5 @@ def infer_command(
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=1) from exc
 
-    echo_status(
-        f"Inferred: {len(output.model.entities)} entities, "
-        f"{len(output.model.events)} events, {len(output.model.fields)} fields"
-    )
-
+    _echo_summary(output)
     typer.echo(output.artifact, nl=False)

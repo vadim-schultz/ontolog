@@ -105,6 +105,32 @@ def _parse_pid(value: Any) -> int | None:
     return None
 
 
+def _parse_json_object(line: str, *, line_number: int) -> dict[str, Any]:
+    """Parse and validate a JSON object line."""
+    try:
+        data = json.loads(line)
+    except json.JSONDecodeError as exc:
+        msg = "invalid JSON line"
+        raise ParseError(msg, line=line, line_number=line_number) from exc
+    if not isinstance(data, dict):
+        msg = "JSON line must be an object"
+        raise ParseError(msg, line=line, line_number=line_number)
+    return data
+
+
+def _require_message(
+    data: dict[str, Any],
+    line: str,
+    line_number: int,
+) -> Any:
+    """Return the message field or raise when missing."""
+    raw_message = _first_value(data, _MESSAGE_KEYS)
+    if raw_message is None:
+        msg = "JSON line missing message field"
+        raise ParseError(msg, line=line, line_number=line_number)
+    return raw_message
+
+
 class JsonParser:
     """Parse JSONL lines including generic, journald, and structlog dialects."""
 
@@ -115,20 +141,8 @@ class JsonParser:
 
     def parse_line(self, line: str, *, line_number: int) -> LogRecord:
         """Parse a JSON object line into a :class:`~ontolog.models.LogRecord`."""
-        try:
-            data = json.loads(line)
-        except json.JSONDecodeError as exc:
-            msg = "invalid JSON line"
-            raise ParseError(msg, line=line, line_number=line_number) from exc
-
-        if not isinstance(data, dict):
-            msg = "JSON line must be an object"
-            raise ParseError(msg, line=line, line_number=line_number)
-
-        raw_message = _first_value(data, _MESSAGE_KEYS)
-        if raw_message is None:
-            msg = "JSON line missing message field"
-            raise ParseError(msg, line=line, line_number=line_number)
+        data = _parse_json_object(line, line_number=line_number)
+        raw_message = _require_message(data, line, line_number)
 
         timestamp = parse_datetime_value(_first_value(data, _TIMESTAMP_KEYS))
         hostname = _first_value(data, _HOSTNAME_KEYS)

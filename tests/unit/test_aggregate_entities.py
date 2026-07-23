@@ -55,9 +55,13 @@ def test_controlboard_aggregation_relationship(tmp_path: Path) -> None:
         weights=default_config().source_weights,
         thresholds=default_config().confidence,
     )
-    owns = next(relationship for relationship in model.relationships if relationship.kind == "owns")
-    assert owns.source_name == "Controlboard"
-    assert owns.target_name == "Interface"
+    owns = {
+        (relationship.source_name, relationship.target_name)
+        for relationship in model.relationships
+        if relationship.kind == "owns"
+    }
+    assert ("Controlboard", "Packet") in owns
+    assert ("Packet", "Interface") in owns
 
 
 def test_order_lifecycle_state_machine(tmp_path: Path) -> None:
